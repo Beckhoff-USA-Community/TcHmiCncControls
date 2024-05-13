@@ -155,8 +155,7 @@ var TcHmi;
 
                 // load nc file into GCode editor
                 loadFile(file, path) {
-                    if (!file || !path)
-                        return;
+                    if (!file || !path) return;
                     this.__fileName = file;
                     
                     // set iframe src
@@ -175,7 +174,8 @@ var TcHmi;
 
                     // create link and trigger click
                     $(`<a target="_blank" download="${path}" href="${url}">Download</a>`)
-                        [0].click();
+                        .get(0)
+                        .click();
                 }
 
                 gotoLine(lineNumber) {

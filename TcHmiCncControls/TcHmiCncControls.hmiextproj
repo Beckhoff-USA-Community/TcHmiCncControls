@@ -97,6 +97,42 @@
     <Content Include="GCodeEditor\Themes\Base\Style.css">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="GCodePathRenderer\Description.json">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="GCodePathRenderer\GCodePathRenderer.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="GCodePathRenderer\Icons\16x16.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="GCodePathRenderer\lib\babylonjs\babylon.gui.min.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="GCodePathRenderer\lib\babylonjs\babylon.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="GCodePathRenderer\lib\babylonjs\babylon.viewer.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="GCodePathRenderer\lib\babylonjs\license.md.txt">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="GCodePathRenderer\Schema\Types.Schema.json">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="GCodePathRenderer\Style.css">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="GCodePathRenderer\Template.html">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="GCodePathRenderer\Themes\Base-Dark\Style.css">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="GCodePathRenderer\Themes\Base\Style.css">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="tsconfig.tpl.json">
       <SubType>Content</SubType>
       <Visible>true</Visible>
@@ -136,6 +172,14 @@
     <Folder Include="GCodeEditor\Themes\" />
     <Folder Include="GCodeEditor\Themes\Base-Dark\" />
     <Folder Include="GCodeEditor\Themes\Base\" />
+    <Folder Include="GCodePathRenderer\" />
+    <Folder Include="GCodePathRenderer\Icons\" />
+    <Folder Include="GCodePathRenderer\lib" />
+    <Folder Include="GCodePathRenderer\lib\babylonjs" />
+    <Folder Include="GCodePathRenderer\Schema\" />
+    <Folder Include="GCodePathRenderer\Themes\" />
+    <Folder Include="GCodePathRenderer\Themes\Base-Dark\" />
+    <Folder Include="GCodePathRenderer\Themes\Base\" />
     <Folder Include="Images\" />
   </ItemGroup>
   <PropertyGroup>

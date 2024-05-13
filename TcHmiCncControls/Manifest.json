@@ -9,6 +9,12 @@
       "basePath": "./GCodeEditor",
       "descriptionFile": "Description.json",
       "toolboxCategory": ""
+    },
+    {
+      "type": "Control",
+      "basePath": "./GCodePathRenderer",
+      "descriptionFile": "Description.json",
+      "toolboxCategory": ""
     }
   ],
   "provideMetadata": {

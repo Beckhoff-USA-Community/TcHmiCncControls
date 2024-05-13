@@ -2740,6 +2740,12 @@
       "frameworkControlType": "GCodeEditor",
       "frameworkControlNamespace": "TcHmi.Controls.TcHmiCncControls"
     },
+    "TcHmi.Controls.TcHmiCncControls.GCodePathRenderer": {
+      "type": "object",
+      "frameworkInstanceOf": "TcHmi.Controls.System.TcHmiControl",
+      "frameworkControlType": "GCodePathRenderer",
+      "frameworkControlNamespace": "TcHmi.Controls.TcHmiCncControls"
+    },
     "TcHmi.Controls.Beckhoff.TcHmiButton": {
       "$schema": "http://json-schema.org/draft-04/schema",
       "type": "object",
