@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.34729.46
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FE7A1B72-C5B7-4D7C-BB7D-76384D4DE8E1}") = "CncView", "CncView\CncView.hmiproj", "{9D17E455-CD7C-48FA-B307-D05405E52EA9}"
+EndProject
+Project("{3B740506-4966-4147-AB1F-357FE08946EA}") = "TcHmiCncControls", "TcHmiCncControls\TcHmiCncControls.hmiextproj", "{183F8F26-ECA7-4A57-8F67-CE529A299577}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|TwinCAT HMI = Debug|TwinCAT HMI
+		Release|TwinCAT HMI = Release|TwinCAT HMI
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9D17E455-CD7C-48FA-B307-D05405E52EA9}.Debug|TwinCAT HMI.ActiveCfg = Debug|TwinCAT HMI
+		{9D17E455-CD7C-48FA-B307-D05405E52EA9}.Debug|TwinCAT HMI.Build.0 = Debug|TwinCAT HMI
+		{9D17E455-CD7C-48FA-B307-D05405E52EA9}.Release|TwinCAT HMI.ActiveCfg = Release|TwinCAT HMI
+		{9D17E455-CD7C-48FA-B307-D05405E52EA9}.Release|TwinCAT HMI.Build.0 = Release|TwinCAT HMI
+		{183F8F26-ECA7-4A57-8F67-CE529A299577}.Debug|TwinCAT HMI.ActiveCfg = Debug|TwinCAT HMI
+		{183F8F26-ECA7-4A57-8F67-CE529A299577}.Debug|TwinCAT HMI.Build.0 = Debug|TwinCAT HMI
+		{183F8F26-ECA7-4A57-8F67-CE529A299577}.Release|TwinCAT HMI.ActiveCfg = Release|TwinCAT HMI
+		{183F8F26-ECA7-4A57-8F67-CE529A299577}.Release|TwinCAT HMI.Build.0 = Release|TwinCAT HMI
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {621CB747-AF7E-4A23-AEC4-222879482905}
+	EndGlobalSection
+EndGlobal

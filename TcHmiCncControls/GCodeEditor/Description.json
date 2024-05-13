@@ -1,0 +1,148 @@
+{
+  "$schema": "../.hmiframework/Schema/ControlDescription.Schema.json",
+  "apiVersion": 1,
+  "name": "GCodeEditor",
+  "namespace": "TcHmi.Controls.TcHmiCncControls",
+  "displayName": "GCodeEditor",
+  "version": {
+    "full": "1.0.0.0",
+    "major": 1,
+    "minor": 0,
+    "revision": 0,
+    "build": 0
+  },
+  "visible": true,
+  "themeable": "Standard",
+  "base": "TcHmi.Controls.System.TcHmiControl",
+  "description": "This description text will be used as a Tooltip in Visual Studio.",
+  "properties": {
+    "containerControl": false,
+    "geometry": {
+      "width": 150,
+      "height": 150
+    }
+  },
+  "icons": [
+    {
+      "name": "Icons/16x16.png",
+      "width": 16,
+      "height": 16
+    }
+  ],
+  "template": "Template.html",
+  "dependencyFiles": [
+    {
+      "name": "GCodeEditor.js",
+      "type": "JavaScript",
+      "description": "Contains all the main logic."
+    },
+    {
+      "name": "Style.css",
+      "type": "Stylesheet",
+      "description": "Theme independent style"
+    },
+    {
+      "name": "lib/ace/ace.js",
+      "type": "JavaScript",
+      "description": "Ace library reference"
+    }
+  ],
+    "themes": {
+        "Base": {
+            "resources": [
+                {
+                    "name": "Themes/Base/Style.css",
+                    "type": "Stylesheet",
+                    "description": "Theme dependent style"
+                }
+            ]
+        },
+        "Base-Dark": {
+            "resources": [
+                {
+                    "name": "Themes/Base-Dark/Style.css",
+                    "type": "Stylesheet",
+                    "description": "Theme dependent style"
+                }
+            ]
+        }
+    },
+  "attributes": [
+    {
+      "displayName": "Font Size",
+      "name": "data-tchmi-font-size",
+      "category": "Common",
+      "propertyGetterName": "getFontSize",
+      "propertySetterName": "setFontSize",
+      "propertyName": "fontSize",
+      "defaultValue": 16,
+      "defaultValueInternal": 16,
+      "type": "tchmi:general#/definitions/Number",
+      "description": "Editor font size"
+    }
+  ],
+  "attributeCategories": [],
+  "functions": [
+    {
+      "category": "Common",
+      "displayName": "LoadFile",
+      "heritable": true,
+      "name": "loadFile",
+      "type": null,
+      "visible": true,
+      "description": "Load GCode File via Path",
+      "params": [
+        {
+          "displayName": "FileName",
+          "name": "file",
+          "type": "tchmi:general#/definitions/String",
+          "visible": true,
+          "bindable": true,
+          "description": "GCode/nc file name"
+        },
+        {
+          "displayName": "Path",
+          "name": "path",
+          "type": "tchmi:general#/definitions/String",
+          "visible": true,
+          "bindable": true,
+          "description": "GCode/nc file path"
+        }
+      ]
+    },
+    {
+      "category": "Common",
+      "displayName": "Save",
+      "heritable": true,
+      "name": "save",
+      "type": null,
+      "visible": true,
+      "description": "Save GCode file"
+    },
+    {
+      "category": "Common",
+      "displayName": "GoToLine",
+      "heritable": true,
+      "name": "gotoLine",
+      "type": null,
+      "visible": true,
+      "description": "Select line number in editor",
+      "params": [
+        {
+          "displayName": "LineNumber",
+          "name": "lineNumber",
+          "type": "tchmi:general#/definitions/Number",
+          "visible": true,
+          "bindable": true,
+          "description": "Line number to goto"
+        }
+      ]
+    }
+  ],
+  "events": [],
+  "dataTypes": [
+    {
+      "schema": "Schema/Types.Schema.json"
+    }
+  ]
+}

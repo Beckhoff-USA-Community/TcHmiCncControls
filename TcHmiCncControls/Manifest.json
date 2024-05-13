@@ -1,0 +1,23 @@
+{
+  "modules": [
+    {
+      "type": "Package",
+      "nugetId": "Beckhoff.TwinCAT.HMI.Framework"
+    },
+    {
+      "type": "Control",
+      "basePath": "./GCodeEditor",
+      "descriptionFile": "Description.json",
+      "toolboxCategory": ""
+    }
+  ],
+  "provideMetadata": {
+    "toolbox": {
+      "TcHmiCncControls": {
+        "200": "TcHmiCncControls"
+      }
+    }
+  },
+  "$schema": ".hmiframework/Schema/Manifest.Schema.json",
+  "apiVersion": 1
+}
