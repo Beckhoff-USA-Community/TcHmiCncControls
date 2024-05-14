@@ -5,6 +5,12 @@
  * Generated 5/13/2024 4:06:42 PM
  * Copyright (C) 2024
  */
+
+GCodeCmd = {
+    G00,
+    G01
+}
+
 var TcHmi;
 (function (/** @type {globalThis.TcHmi} */ TcHmi) {
     let Controls;
@@ -35,6 +41,8 @@ var TcHmi;
 
                     this.__elementCanvas = null;
                     this.__engine = null;
+
+                    this.__pathString = "";
 
                     // camera view positions
                     this.__views = [
@@ -155,6 +163,20 @@ var TcHmi;
                     return scene;
                 }
 
+                __parseGCode(gcode) {
+                    const ctrl = this;
+                    let commands = [];
+
+                    const lines = gcode.split("\n");
+                    lines.forEach((line, i) => {
+                        // remove line number and comments
+                        const clean = line.replace(/^(?:N\d+\s+)|(?:;.*$|\(.*?\))/gm, "");
+                        // separate commands and parameters
+                        const tokens = clean.match(/[A-Z]-?[0-9]*\.?[0-9]+/gi);
+                        //(/(%.*)|({.*)|((?:\$\$)|(?:\$[a-zA-Z0-9#]*))|([a-zA-Z][0-9\+\-\.]+)|(\*[0-9]+)/gmi);
+                    });
+                }
+
                 /**
                  * Destroy the current control instance.
                  * Will be called automatically if the framework destroys the control instance!
@@ -170,6 +192,12 @@ var TcHmi;
                     /**
                      * Free resources like child controls etc.
                      */
+                }
+
+                setPath(path) {
+                    this.__pathString = path;
+                    if (path.length)
+                        this.__parseGCode(path);
                 }
             }
             TcHmiCncControls.GCodePathRenderer = GCodePathRenderer;

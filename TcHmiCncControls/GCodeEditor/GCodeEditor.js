@@ -37,7 +37,9 @@ var TcHmi;
                     this.__elementEditor = null;
                     this.__elementIframe = null;
                     this.__fileName = "";
+
                     this.__fontSize = 16;
+                    this.__isReadOnly = false;
 
                     var guid = tchmi_create_guid();
                     this.__eIframeOnLoad = 'load.' + guid;
@@ -148,6 +150,8 @@ var TcHmi;
                             ctrl.__editor.setValue(content);
                             ctrl.__editor.gotoLine(1, 0, false);
                         }
+
+                        TcHmi.EventProvider.raise(`${ctrl.getId()}.onFileLoaded`);
                     }
                 }
 
@@ -184,14 +188,33 @@ var TcHmi;
                     this.__editor.selection.selectLine();
                 }
 
+                ///////////////         property accesors      ///////////////////
+
                 getFontSize() {
                     return this.__fontSize;
                 }
 
                 setFontSize(value) {
+                    this.__fontSize = value;
                     if (this.__editor) {
                         this.__editor.setFontSize(value);
                     }
+                }
+
+                getIsReadOnly() {
+                    return this.__isReadOnly;
+                }
+
+                setIsReadOnly(value) {
+                    this.__isReadOnly = value;
+                    if (this.__editor) {
+                        this.__editor.setReadOnly(value);
+                    }
+                }
+
+                getContent() {
+                    if (this.__editor)
+                        return this.__editor.getValue();
                 }
 
             }

@@ -72,13 +72,40 @@
       "displayName": "Font Size",
       "name": "data-tchmi-font-size",
       "category": "Common",
+      "propertyName": "fontSize",
       "propertyGetterName": "getFontSize",
       "propertySetterName": "setFontSize",
-      "propertyName": "fontSize",
+      "type": "tchmi:general#/definitions/Number",
       "defaultValue": 16,
       "defaultValueInternal": 16,
-      "type": "tchmi:general#/definitions/Number",
+      "bindable": true,
       "description": "Editor font size"
+    },
+    {
+      "displayName": "Read Only",
+      "name": "data-tchmi-read-only",
+      "category": "Common",
+      "propertyName": "isReadOnly",
+      "propertyGetterName": "getIsReadOnly",
+      "propertySetterName": "setIsReadOnly",
+      "type": "tchmi:general#/definitions/Boolean",
+      "defaultValue": false,
+      "defaultValueInternal": false,
+      "bindable": true,
+      "description": "Editor is read only"
+    },
+    {
+      "displayName": "Content",
+      "name": "data-tchmi-editor-content",
+      "category": "Common",
+      "propertyGetterName": "getContent",
+      "propertyName": "content",
+      "type": "tchmi:general#/definitions/String",
+      "defaultValue": "",
+      "defaultValueInternal": "",
+      "bindable": false,
+      "description": "Editor content as string",
+      "readOnly": true
     }
   ],
   "attributeCategories": [],
@@ -139,7 +166,16 @@
       ]
     }
   ],
-  "events": [],
+  "events": [
+    {
+      "category": "Control",
+      "displayName": "onFileLoaded",
+      "heritable": true,
+      "name": "onFileLoaded",
+      "visible": true,
+      "description": "Fires when content is loaded from file"
+    }
+  ],
   "dataTypes": [
     {
       "schema": "Schema/Types.Schema.json"

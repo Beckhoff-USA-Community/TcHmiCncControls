@@ -70,7 +70,27 @@
   "attributes": [
   ],
   "attributeCategories": [],
-  "functions": [],
+  "functions": [
+    {
+      "category": "Common",
+      "displayName": "SetPath",
+      "heritable": true,
+      "name": "setPath",
+      "type": null,
+      "visible": true,
+      "description": "Writes the code path to render",
+      "params": [
+        {
+          "displayName": "Path",
+          "name": "path",
+          "type": "tchmi:general#/definitions/String",
+          "visible": true,
+          "bindable": true,
+          "description": "GCode path as string"
+        }
+      ]
+    }
+  ],
   "events": [],
   "dataTypes": [
     {
