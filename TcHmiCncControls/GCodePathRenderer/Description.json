@@ -45,6 +45,11 @@
       "name": "lib/babylonjs/babylon.js",
       "type": "JavaScript",
       "description": "Babylon.js library"
+    },
+    {
+      "name": "Modules/GCodeParser.js",
+      "type": "JavaScript",
+      "description": "GCode parsing module"
     }
   ],
     "themes": {

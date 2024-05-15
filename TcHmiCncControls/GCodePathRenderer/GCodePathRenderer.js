@@ -6,11 +6,6 @@
  * Copyright (C) 2024
  */
 
-GCodeCmd = {
-    G00,
-    G01
-}
-
 var TcHmi;
 (function (/** @type {globalThis.TcHmi} */ TcHmi) {
     let Controls;
@@ -43,10 +38,11 @@ var TcHmi;
                     this.__engine = null;
 
                     this.__pathString = "";
+                    this.__relativeMode = false;
 
-                    // camera view positions
-                    this.__views = [
-                        { name: "camera0", alpha: 1.2, beta: 1.2, radius: 7, target: new BABYLON.Vector3(0, 0, 0) },
+                    // constants
+                    this.__VIEWS = [
+                        { name: "camera0", alpha: 1.2, beta: 1.2, radius: 50, target: new BABYLON.Vector3(0, 0, 0) },
                         { name: "camera1", alpha: 2, beta: 1.2, radius: 7, target: new BABYLON.Vector3(0, 0, 0) },
                         { name: "camera2", alpha: -1.2, beta: 1.2, radius: 7, target: new BABYLON.Vector3(0, 0, 0) },
                         { name: "camera3", alpha: -2, beta: 1.2, radius: 7, target: new BABYLON.Vector3(0, 0, 0) }
@@ -99,7 +95,7 @@ var TcHmi;
                         });
 
                         // give time for init, then resize
-                        setTimeout(() => { engine.resize(); }, 1000);
+                        setTimeout(() => { engine.resize(); }, 500);
                     }
                 }
                 /**
@@ -128,14 +124,14 @@ var TcHmi;
                 __createScene() {
                     // create scene
                     const scene = new BABYLON.Scene(this.__engine);
-
+                    
                     // init camera from view array
                     const camera = new BABYLON.ArcRotateCamera(
-                        this.__views[0].name,
-                        this.__views[0].alpha,
-                        this.__views[0].beta,
-                        this.__views[0].radius,
-                        this.__views[0].target,
+                        this.__VIEWS[0].name,
+                        this.__VIEWS[0].alpha,
+                        this.__VIEWS[0].beta,
+                        this.__VIEWS[0].radius,
+                        this.__VIEWS[0].target,
                         scene
                     );
 
@@ -151,30 +147,14 @@ var TcHmi;
                     // Default intensity is 1. Let's dim the light a small amount
                     light.intensity = 0.7;
 
-                    // Our built-in 'sphere' shape.
-                    var sphere = BABYLON.MeshBuilder.CreateSphere("sphere", { diameter: 2, segments: 32 }, scene);
-
-                    // Move the sphere upward 1/2 its height
-                    sphere.position.y = 1;
-
-                    // Our built-in 'ground' shape.
-                    var ground = BABYLON.MeshBuilder.CreateGround("ground", { width: 6, height: 6 }, scene);
+                    const axes = new BABYLON.Debug.AxesViewer(scene, 10)
 
                     return scene;
                 }
 
                 __parseGCode(gcode) {
-                    const ctrl = this;
-                    let commands = [];
-
-                    const lines = gcode.split("\n");
-                    lines.forEach((line, i) => {
-                        // remove line number and comments
-                        const clean = line.replace(/^(?:N\d+\s+)|(?:;.*$|\(.*?\))/gm, "");
-                        // separate commands and parameters
-                        const tokens = clean.match(/[A-Z]-?[0-9]*\.?[0-9]+/gi);
-                        //(/(%.*)|({.*)|((?:\$\$)|(?:\$[a-zA-Z0-9#]*))|([a-zA-Z][0-9\+\-\.]+)|(\*[0-9]+)/gmi);
-                    });
+                    const parser = new GCodeParser();
+                    const cmds = parser.Parse(gcode);
                 }
 
                 /**
