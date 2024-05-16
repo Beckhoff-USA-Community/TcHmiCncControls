@@ -50,6 +50,11 @@
       "name": "Modules/GCodeParser.js",
       "type": "JavaScript",
       "description": "GCode parsing module"
+    },
+    {
+      "name": "Modules/GCodePathInterpreter.js",
+      "type": "JavaScript",
+      "description": "GCode interpreting module"
     }
   ],
     "themes": {

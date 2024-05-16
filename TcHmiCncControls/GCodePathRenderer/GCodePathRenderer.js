@@ -153,8 +153,8 @@ var TcHmi;
                 }
 
                 __parseGCode(gcode) {
-                    const parser = new GCodeParser();
-                    const cmds = parser.Parse(gcode);
+                    const interpreter = new GCodePathInterpreter();
+                    const cmds = interpreter.trace(gcode);
                 }
 
                 /**

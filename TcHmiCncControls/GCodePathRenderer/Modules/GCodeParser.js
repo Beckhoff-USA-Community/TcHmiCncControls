@@ -1,106 +1,103 @@
 // Keep these lines for a best effort IntelliSense of Visual Studio 2017 and higher.
 /// <reference path="./../../../Packages/Beckhoff.TwinCAT.HMI.Framework.12.760.59/runtimes/native1.12-tchmi/TcHmi.d.ts" />
 
-const GCodeParser = function () {
-    this.relative = false;
-    this.multiplier = 1;
-};
+class GCodeParser {
 
-GCodeParser.prototype.Parse = function(gcode) {
-    const lines = gcode.split("\n");
-    lines.forEach((line, i) => {
-        // remove line number and comments
-        const clean = line.replace(/^(?:N\d+\s+)|;.*$|\(.*?\)|\/.*$/gm, "");
-        // separate commands and parameters
-        const tokens = clean.match(/[A-Z]-?[0-9]*\.?[0-9]+/gi);
-        if (tokens && tokens.length) {
-            const cmds = this.parseLine(tokens, i);
-            //if (cmds) commands.push(...cmds);
-        } else {
-            // empty line
-        }
-    });
-}
+    constructor() {
 
-GCodeParser.prototype.parseLine = function(tokens, lineNum) {
+        // gcodes we care about
+        this.gCodes = [
+            'G0', 'G00',
+            'G1', 'G01',
+            'G2', 'G02',
+            'G3', 'G03',
+            'G17',
+            'G28',
+            'G70',
+            'G71',
+            'G90',
+            'G91'
+        ];
+    }
 
-    let commands = [];
+    // parses gcode string and returns object array
+    Parse(gcode) {
 
-    // gcodes that we care about
-    const GCodes = Object.fromEntries(Object.entries({
-        G0: this.gPath, G00: this.gPath,
-        G1: this.gPath, G01: this.gPath,
-        G2: this.gPath, G02: this.gPath,
-        G3: this.gPath, G03: this.gPath,
-        G70: this.g70,
-        G71: this.g71,
-        G90: this.g90,
-        G91: this.g91
-    }).map(([k, v]) => [k, v.bind(this)]));
-    // bind methods to maintain 'this' scope
-
-    // other instructions we may care about?
-    // G04 - dwell/pause
-    // G40 - cutcomp
-    // G17/18/19 - XY, XZ, YZ plane
-    // G161 - home
-
-    // find G cmd + params
-    const gcodes = Object.keys(GCodes);
-    for (let i = 0; i < tokens.length; i++) {
-        // new instruction
-        if (gcodes.includes(tokens[i].toUpperCase())) {
-            // get params
-            let j = i + 1;
-            let args = [];
-            while (tokens[j] && !gcodes.includes(tokens[j].toUpperCase())) {
-                args.push(tokens[j]);
-                j++;
+        let parsed = [];
+        const lines = gcode.split("\n");
+        lines.forEach((line, i) => {
+            // clean and tokenize line
+            const tokens = this.tokenize(this.clean(line));
+            if (tokens && tokens.length) {
+                // check line for multiple codes
+                const codes = this.splitList(tokens);
+                parsed.push(...codes.map(x => new GCodeParseStruct(x, i)));
             }
-            // invoke method by token name
-            GCodes[tokens[i]](tokens[i], args, lineNum);
-            i = j + i;
+        });
+
+        return parsed;
+    }
+
+    // removes line numbers and comments
+    clean(line) {
+        return line.replace(/^(?:N\d+\s+)|;.*$|\(.*?\)|\/.*$/gm, "");
+    }
+
+    // separates gcodes and arguments into array
+    tokenize(line) {
+        return line.match(/[a-zA-Z]-?[0-9]*\.?[0-9]+/gi);
+    }
+
+    // split line with mutliple codes into separate code/argument lists
+    // (line may contain multiple GCodes w/ args)
+    splitList(tokenList) {
+        let codes = [];
+        for (let i = 0; i < tokenList.length; i++) {
+            // new instruction
+            if (this.gCodes.includes(tokenList[i].toUpperCase())) {
+                // get params
+                let j = i + 1;
+                let args = [];
+                while (tokenList[j] && !this.gCodes.includes(tokenList[j].toUpperCase())) {
+                    args.push(tokenList[j]);
+                    j++;
+                }
+                codes.push([tokenList[i], ...args]);
+                i = j - 1;
+            }
+        }
+        return codes;
+    }
+}
+
+class GCodeParseStruct {
+    constructor(tokens, lineNumber) {
+        if (tokens && tokens.length) {
+            // set gcode and line number
+            this.code = tokens[0];
+            this.line = lineNumber;
+
+            // set args
+            this.args = tokens.slice(1).reduce((obj, arg) => {
+                // get arg name - TODO (maybe): only supports single char arg names
+                const name = arg[0];
+                // get arg value
+                let value = parseFloat(arg.substring(1));
+                obj[name] = value;
+                return obj;
+            }, {});
         }
     }
-}
 
-GCodeParser.prototype.gPath = function(code, args, lineNum) {
-
-    const mult = this.multiplier;
-    
-    const gObj = args.reduce((obj, arg) => {
-        // get key name
-        const name = arg[0];
-        // get key value
-        let value = parseFloat(arg.substring(1));
-        // apply unit sclaing
-        value = (['X', 'Y', 'Z', 'I', 'J'].includes(name)) ? (value * mult) : value;
-        obj[name] = value;
-        return obj;
-    }, {});
-
-    // TODO
-    if (this.relative) {
-        // offset x/y/z
+    get Code() {
+        return this.code;
     }
 
-    // set g code and line number
-    gObj.code = code;
-    gObj.line = lineNum;
-}
+    get Line() {
+        return this.line;
+    }
 
-GCodeParser.prototype.g70 = function() {
-    this.multiplier = 25.4;
-}
-
-GCodeParser.prototype.g71 = function() {
-    this.multiplier = 1;
-}
-
-GCodeParser.prototype.g90 = function() {
-    this.relative = false;
-}
-
-GCodeParser.prototype.g91 = function() {
-    this.relative = true;
+    get Args() {
+        return this.args;
+    }
 }

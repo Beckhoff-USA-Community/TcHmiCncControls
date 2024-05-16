@@ -121,6 +121,9 @@
     <Content Include="GCodePathRenderer\Modules\GCodeParser.js">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="GCodePathRenderer\Modules\GCodePathInterpreter.js">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="GCodePathRenderer\Schema\Types.Schema.json">
       <SubType>Content</SubType>
     </Content>
