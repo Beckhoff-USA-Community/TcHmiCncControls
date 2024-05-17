@@ -196,9 +196,7 @@ var TcHmi;
 
                 setFontSize(value) {
                     this.__fontSize = value;
-                    if (this.__editor) {
-                        this.__editor.setFontSize(value);
-                    }
+                    this.__editor?.setFontSize(value);
                 }
 
                 getIsReadOnly() {
@@ -207,14 +205,15 @@ var TcHmi;
 
                 setIsReadOnly(value) {
                     this.__isReadOnly = value;
-                    if (this.__editor) {
-                        this.__editor.setReadOnly(value);
-                    }
+                    this.__editor?.setReadOnly(value);
                 }
 
                 getContent() {
-                    if (this.__editor)
-                        return this.__editor.getValue();
+                    return this.__editor?.getValue() || "";
+                }
+
+                setContent(value) {
+                    this.__editor?.setValue(value);
                 }
 
             }

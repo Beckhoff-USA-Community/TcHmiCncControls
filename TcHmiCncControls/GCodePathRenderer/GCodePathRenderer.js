@@ -96,6 +96,14 @@ var TcHmi;
 
                         // give time for init, then resize
                         setTimeout(() => { engine.resize(); }, 500);
+
+                        scene.onPointerObservable.add((pointerInfo) => {
+                            if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERDOWN) {
+                                if (pointerInfo.pickInfo.hit) {
+                                    this.__pointerDown(pointerInfo.pickInfo.pickedMesh)
+                                }
+                            }
+                        });
                     }
                 }
                 /**
@@ -119,6 +127,10 @@ var TcHmi;
                      * Disable everything that is not needed while the control is not part of the active DOM.
                      * For example, there is usually no need to listen for events!
                      */
+                }
+
+                __pointerDown(mesh) {
+                    console.log(mesh);
                 }
 
                 __createScene() {
@@ -153,8 +165,9 @@ var TcHmi;
                 }
 
                 __parseGCode(gcode) {
+                    
                     const interpreter = new GCodePathInterpreter();
-                    const cmds = interpreter.trace(gcode);
+                    interpreter.trace(gcode, this.__engine.scene);
                 }
 
                 /**

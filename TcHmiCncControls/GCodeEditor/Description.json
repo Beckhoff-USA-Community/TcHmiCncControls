@@ -99,13 +99,13 @@
       "name": "data-tchmi-editor-content",
       "category": "Common",
       "propertyGetterName": "getContent",
+      "propertySetterName": "setContent",
       "propertyName": "content",
       "type": "tchmi:general#/definitions/String",
       "defaultValue": "",
       "defaultValueInternal": "",
       "bindable": false,
-      "description": "Editor content as string",
-      "readOnly": true
+      "description": "Editor content as string"
     }
   ],
   "attributeCategories": [],

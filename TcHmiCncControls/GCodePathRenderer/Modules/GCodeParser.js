@@ -90,7 +90,7 @@ class GCodeParseStruct {
     }
 }
 
-// export for Jest testing
+// export for testing
 try {
     if (process.env.NODE_ENV === 'test') {
         module.exports = GCodeParser;
