@@ -31,6 +31,9 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <DefaultNamespace>TcHmiCncControls</DefaultNamespace>
+    <PreBuildEvent>npm test</PreBuildEvent>
+    <PostBuildEvent />
+    <RunPostBuildEvent>Always</RunPostBuildEvent>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|TwinCAT HMI' ">
     <PlatformTarget>TwinCAT HMI</PlatformTarget>
@@ -124,6 +127,9 @@
     <Content Include="GCodePathRenderer\Modules\GCodePathInterpreter.js">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="GCodePathRenderer\Modules\tests\GCodeParser.test.js">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="GCodePathRenderer\Schema\Types.Schema.json">
       <SubType>Content</SubType>
     </Content>
@@ -137,6 +143,9 @@
       <SubType>Content</SubType>
     </Content>
     <Content Include="GCodePathRenderer\Themes\Base\Style.css">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="package.json">
       <SubType>Content</SubType>
     </Content>
     <Content Include="tsconfig.tpl.json">
@@ -183,6 +192,7 @@
     <Folder Include="GCodePathRenderer\lib" />
     <Folder Include="GCodePathRenderer\lib\babylonjs" />
     <Folder Include="GCodePathRenderer\Modules" />
+    <Folder Include="GCodePathRenderer\Modules\tests" />
     <Folder Include="GCodePathRenderer\Schema\" />
     <Folder Include="GCodePathRenderer\Themes\" />
     <Folder Include="GCodePathRenderer\Themes\Base-Dark\" />

@@ -75,7 +75,7 @@ class GCodeParseStruct {
         if (tokens && tokens.length) {
             // set gcode and line number
             this.code = tokens[0];
-            this.line = lineNumber;
+            this.line = lineNumber + 1;
 
             // set args
             this.args = tokens.slice(1).reduce((obj, arg) => {
@@ -88,16 +88,15 @@ class GCodeParseStruct {
             }, {});
         }
     }
-
-    get Code() {
-        return this.code;
-    }
-
-    get Line() {
-        return this.line;
-    }
-
-    get Args() {
-        return this.args;
-    }
 }
+
+// export for Jest testing
+try {
+    if (process.env.NODE_ENV === 'test') {
+        module.exports = GCodeParser;
+    }
+} catch (e) {
+    // do nothing
+}
+
+

@@ -14,6 +14,7 @@ class GCodePathInterpreter {
     trace(gcode) {
         const parser = new GCodeParser();
         const parsed = parser.Parse(gcode);
+        console.log(parsed);
     }
 
     g0(val) { return g00(val) }
