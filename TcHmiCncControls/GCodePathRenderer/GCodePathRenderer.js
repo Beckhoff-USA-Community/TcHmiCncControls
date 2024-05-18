@@ -42,7 +42,7 @@ var TcHmi;
 
                     // constants
                     this.__VIEWS = [
-                        { name: "camera0", alpha: 1.2, beta: 1.2, radius: 50, target: new BABYLON.Vector3(0, 0, 0) },
+                        { name: "camera0", alpha: 1.2, beta: 1.2, radius: 75, target: new BABYLON.Vector3(0, 0, 0) },
                         { name: "camera1", alpha: 2, beta: 1.2, radius: 7, target: new BABYLON.Vector3(0, 0, 0) },
                         { name: "camera2", alpha: -1.2, beta: 1.2, radius: 7, target: new BABYLON.Vector3(0, 0, 0) },
                         { name: "camera3", alpha: -2, beta: 1.2, radius: 7, target: new BABYLON.Vector3(0, 0, 0) }
@@ -149,9 +149,22 @@ var TcHmi;
 
                     // attach mouse controls to camera
                     camera.attachControl();
+                    let prevRadius = camera.radius;
 
                     // This targets the camera to scene origin
                     camera.setTarget(BABYLON.Vector3.Zero());
+
+                    camera.wheelPrecision = 10;
+                    scene.beforeRender = () => {
+                        let ratio = 10;
+                        if (prevRadius != camera.radius) {
+                            ratio = prevRadius / camera.radius;
+                            prevRadius = camera.radius;
+
+                            camera.panningSensibility *= ratio;
+                            camera.wheelPrecision *= ratio;
+                        }
+                    };
 
                     // This creates a light, aiming 0,1,0 - to the sky (non-mesh)
                     var light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
@@ -159,7 +172,7 @@ var TcHmi;
                     // Default intensity is 1. Let's dim the light a small amount
                     light.intensity = 0.7;
 
-                    const axes = new BABYLON.Debug.AxesViewer(scene, 10)
+                    const axes = new BABYLON.Debug.AxesViewer(scene, 20)
 
                     return scene;
                 }
