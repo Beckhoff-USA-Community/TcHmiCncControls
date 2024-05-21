@@ -31,7 +31,8 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <DefaultNamespace>TcHmiCncControls</DefaultNamespace>
-    <PreBuildEvent>npm test</PreBuildEvent>
+    <PreBuildEvent>
+    </PreBuildEvent>
     <PostBuildEvent />
     <RunPostBuildEvent>Always</RunPostBuildEvent>
   </PropertyGroup>

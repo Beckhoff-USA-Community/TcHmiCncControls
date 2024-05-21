@@ -78,6 +78,20 @@
         }
     },
   "attributes": [
+    {
+      "displayName": "SelectedMesh",
+      "name": "data-tchmi-selected-mesh",
+      "propertyGetterName": "getSelectedMeshId",
+      "propertyName": "selectedMeshId",
+      "type": "tchmi:general#/definitions/Number",
+      "category": "Common",
+      "readOnly": true,
+      "bindable": true,
+      "visible": true,
+      "defaultValue": 0,
+      "defaultValueInternal": 0,
+      "description": "Returns last selected (clicked or pressed) mesh number."
+    }
   ],
   "attributeCategories": [],
   "functions": [
@@ -101,7 +115,16 @@
       ]
     }
   ],
-  "events": [],
+  "events": [
+    {
+      "category": "Operator",
+      "displayName": "onPathSegmentPressed",
+      "heritable": true,
+      "name": "onPathSegmentPressed",
+      "visible": true,
+      "description": "Fires when a rendered path segment is clicked or pressed."
+    }
+  ],
   "dataTypes": [
     {
       "schema": "Schema/Types.Schema.json"

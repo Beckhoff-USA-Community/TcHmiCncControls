@@ -216,6 +216,9 @@ var TcHmi;
                     this.__editor?.setValue(value);
                 }
 
+                getSelectedLine() {
+                    return this.__selectedLine;
+                }
             }
             TcHmiCncControls.GCodeEditor = GCodeEditor;
         })(TcHmiCncControls = Controls.TcHmiCncControls || (Controls.TcHmiCncControls = {}));

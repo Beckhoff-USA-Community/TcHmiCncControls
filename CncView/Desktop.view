@@ -103,12 +103,16 @@
 </script>
 
 </div>
-<div id="TcHmiButton_2" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiButton" data-tchmi-height="50" data-tchmi-height-unit="px" data-tchmi-left="351" data-tchmi-left-unit="px" data-tchmi-text="GotoLine" data-tchmi-top="52" data-tchmi-top-unit="px" data-tchmi-width="100" data-tchmi-width-unit="px" data-tchmi-word-wrap="true">
+<div id="GCodePathRenderer" data-tchmi-type="TcHmi.Controls.TcHmiCncControls.GCodePathRenderer" data-tchmi-height="486" data-tchmi-height-unit="px" data-tchmi-left="764" data-tchmi-left-unit="px" data-tchmi-top="115" data-tchmi-top-unit="px" data-tchmi-width="473" data-tchmi-width-unit="px">
+
+
+
+
 
 <script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
 [
   {
-    "event": "TcHmiButton_2.onPressed",
+    "event": "GCodePathRenderer.onPathSegmentPressed",
     "actions": [
       {
         "objectType": "ControlApiFunction",
@@ -117,9 +121,9 @@
         "fn": "gotoLine",
         "fnParams": [
           {
-            "objectType": "StaticValue",
+            "objectType": "Symbol",
             "valueType": "tchmi:general#/definitions/Number",
-            "value": 100.0
+            "symbolExpression": "%ctrl%GCodePathRenderer::selectedMeshId%/ctrl%"
           }
         ],
         "asyncWait": true
@@ -128,8 +132,6 @@
   }
 ]
 </script>
-</div>
-<div id="GCodePathRenderer" data-tchmi-type="TcHmi.Controls.TcHmiCncControls.GCodePathRenderer" data-tchmi-height="486" data-tchmi-height-unit="px" data-tchmi-left="764" data-tchmi-left-unit="px" data-tchmi-top="115" data-tchmi-top-unit="px" data-tchmi-width="473" data-tchmi-width-unit="px">
 </div>
 <div id="TcHmiButton_3" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiButton" data-tchmi-height="50" data-tchmi-height-unit="px" data-tchmi-left="654" data-tchmi-left-unit="px" data-tchmi-text="Render" data-tchmi-top="611" data-tchmi-top-unit="px" data-tchmi-width="100" data-tchmi-width-unit="px" data-tchmi-word-wrap="true">
 <script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">

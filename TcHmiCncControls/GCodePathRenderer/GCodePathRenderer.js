@@ -39,6 +39,7 @@ var TcHmi;
 
                     this.__pathString = "";
                     this.__relativeMode = false;
+                    this.__selectedMeshId = 0;
 
                     // constants
                     this.__VIEWS = [
@@ -100,7 +101,7 @@ var TcHmi;
                         scene.onPointerObservable.add((pointerInfo) => {
                             if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERDOWN) {
                                 if (pointerInfo.pickInfo.hit) {
-                                    this.__pointerDown(pointerInfo.pickInfo.pickedMesh)
+                                    this.__onMeshPicked(pointerInfo.pickInfo.pickedMesh)
                                 }
                             }
                         });
@@ -129,8 +130,9 @@ var TcHmi;
                      */
                 }
 
-                __pointerDown(mesh) {
-                    console.log(mesh);
+                __onMeshPicked(mesh) {
+                    this.__selectedMeshId = parseInt(mesh.id);
+                    TcHmi.EventProvider.raise(`${this.getId()}.onPathSegmentPressed`);
                 }
 
                 __createScene() {
@@ -204,6 +206,10 @@ var TcHmi;
                     this.__pathString = path;
                     if (path.length)
                         this.__parseGCode(path);
+                }
+
+                getSelectedMeshId() {
+                    return this.__selectedMeshId;
                 }
             }
             TcHmiCncControls.GCodePathRenderer = GCodePathRenderer;
