@@ -106,6 +106,19 @@
       "defaultValueInternal": "",
       "bindable": false,
       "description": "Editor content as string"
+    },
+    {
+      "displayName": "SelectedLine",
+      "name": "data-tchmi-selected-line",
+      "category": "Common",
+      "propertyGetterName": "getSelectedLine",
+      "propertyName": "selectedLine",
+      "type": "tchmi:general#/definitions/Number",
+      "defaultValue": 0,
+      "defaultValueInternal": 0,
+      "bindable": false,
+      "readOnly": true,
+      "description": "Selected line in editor"
     }
   ],
   "attributeCategories": [],
@@ -173,7 +186,15 @@
       "heritable": true,
       "name": "onFileLoaded",
       "visible": true,
-      "description": "Fires when content is loaded from file"
+      "description": "Fires when content is loaded from file."
+    },
+    {
+      "category": "Operator",
+      "displayName": "onLineSelectionChanged",
+      "heritable": true,
+      "name": "onLineSelectionChanged",
+      "visible": true,
+      "description": "Fires when the selected line within the editor changes."
     }
   ],
   "dataTypes": [

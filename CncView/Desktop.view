@@ -24,6 +24,22 @@
         "asyncWait": true
       }
     ]
+  },
+  {
+    "event": "GCodeEditor.onLineSelectionChanged",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%ctrl%TcHmiTextblock_1::Text%/ctrl%",
+        "value": {
+          "objectType": "Symbol",
+          "valueType": "tchmi:general#/definitions/String",
+          "symbolExpression": "%f%%ctrl%GCodeEditor::selectedLine%/ctrl%%/f%"
+        },
+        "asyncWait": true
+      }
+    ]
   }
 ]
 </script>
@@ -157,5 +173,7 @@
   }
 ]
 </script>
+</div>
+<div id="TcHmiTextblock_1" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-height="26" data-tchmi-height-unit="px" data-tchmi-left="321" data-tchmi-left-unit="px" data-tchmi-top="80" data-tchmi-top-unit="px" data-tchmi-width="370" data-tchmi-width-unit="px" data-tchmi-word-wrap="true">
 </div>
 </div>

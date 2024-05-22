@@ -71,10 +71,6 @@ class GCodePathInterpreter {
             true
         );
 
-        //const p1 = new BABYLON.Vector3(this.prevPoint.x, this.prevPoint.y, this.prevPoint.z);
-        //const p2 = new BABYLON.Vector3(midPoint.x, midPoint.y, midPoint.z);
-        //const p3 = new BABYLON.Vector3(dest.x, dest.y, dest.z);
-        /*const arc = BABYLON.Curve3.ArcThru3Points(p1, p2, p3);*/
         const line = BABYLON.MeshBuilder.CreateLines(lineNum.toString(), { points: points }, this.scene);
         line.color = new BABYLON.Color3(1, 0, 0);
         this.prevPoint = dest;
@@ -90,10 +86,6 @@ class GCodePathInterpreter {
             false
         );
 
-        //const p1 = new BABYLON.Vector3(this.prevPoint.x, this.prevPoint.y, this.prevPoint.z);
-        //const p2 = new BABYLON.Vector3(midPoint.x, midPoint.y, midPoint.z);
-        //const p3 = new BABYLON.Vector3(dest.x, dest.y, dest.z);
-        //const arc = BABYLON.Curve3.ArcThru3Points(p1, p2, p3);
         const line = BABYLON.MeshBuilder.CreateLines(lineNum.toString(), { points: points }, this.scene);
         line.color = new BABYLON.Color3(0, 1, 0);
         this.prevPoint = dest;
@@ -137,9 +129,7 @@ class GCodePathInterpreter {
         function MatInverse(m) {
 
             let iv = new Array(3);
-            iv[0] = new Array(3);
-            iv[1] = new Array(3);
-            iv[2] = new Array(3);
+            iv[0] = new Array(3); iv[1] = new Array(3); iv[2] = new Array(3);
 
             const det = MatDet(m);
 
@@ -262,7 +252,8 @@ class GCodePathInterpreter {
         points.push(startPoint);
         for (let i = 1; i <= nseg; i++) {
             let coords = {};
-            // TODO: alt planes
+            // TODO: XZ / YZ working planes
+            // XY plane
             if (true) {
                 coords = {
                     x: invTransform[0][0] * (radius * Math.cos(a0 + i * (a1 - a0) / nseg)) + invTransform[0][1] * (radius * Math.sin(a0 + i * (a1 - a0) / nseg)) + centerPoint.x,

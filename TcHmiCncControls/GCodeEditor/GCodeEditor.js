@@ -40,6 +40,7 @@ var TcHmi;
 
                     this.__fontSize = 16;
                     this.__isReadOnly = false;
+                    this.__selectedLine = 0;
 
                     var guid = tchmi_create_guid();
                     this.__eIframeOnLoad = 'load.' + guid;
@@ -64,6 +65,12 @@ var TcHmi;
                         this.__setTheme();
                         this.__editor.session.setMode("ace/mode/gcode");
                         this.__editor.setFontSize(this.__fontSize ?? 16);
+
+                        const ctrl = this;
+                        this.__editor.on("changeSelection", function () {
+                            ctrl.__selectedLine = ctrl.__editor.selection.getRange().start.row || 0;
+                            TcHmi.EventProvider.raise(`${ctrl.getId()}.onLineSelectionChanged`);
+                        });
                     }
                     
                     // Call __previnit of base class
@@ -109,6 +116,7 @@ var TcHmi;
                      */
                     this.__elementIframe.off(this.__eIframeOnLoad);
                     this.__onThemeChange();
+                    this.__editor.off("changeSelection");
                 }
                 /**
                  * Destroy the current control instance.
