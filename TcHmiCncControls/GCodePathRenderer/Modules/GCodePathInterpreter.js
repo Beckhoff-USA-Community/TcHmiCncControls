@@ -1,8 +1,6 @@
 // Keep these lines for a best effort IntelliSense of Visual Studio 2017 and higher.
 /// <reference path="./../../../Packages/Beckhoff.TwinCAT.HMI.Framework.12.760.59/runtimes/native1.12-tchmi/TcHmi.d.ts" />
 
-//const BABYLON = require('../lib/babylonjs');
-
 class GCodePathInterpreter {
 
     constructor(scene) {
@@ -47,14 +45,6 @@ class GCodePathInterpreter {
         return ret;
     }
 
-    getCenterPoint(p0, p1) {
-        return {
-            x: Math.round((p0.x + p1.i) * 10000) / 10000,
-            y: Math.round((p0.y + p1.j) * 10000) / 10000,
-            z: Math.round((p0.z + p1.k) * 10000) / 10000
-        };
-    }
-
     g0(args, lineNum) { this.g00(args, lineNum) }
     g00(args, lineNum) {
         this.g01(args, lineNum);
@@ -77,7 +67,7 @@ class GCodePathInterpreter {
         const points = this.calculateArcPoints(
             this.prevPoint,
             dest,
-            this.getCenterPoint(this.prevPoint, dest),
+            { x: dest.i, y: dest.j, z: dest.k },
             true
         );
 
@@ -96,7 +86,7 @@ class GCodePathInterpreter {
         const points = this.calculateArcPoints(
             this.prevPoint,
             dest,
-            this.getCenterPoint(this.prevPoint, dest),
+            { x: dest.i, y: dest.j, z: dest.k },
             false
         );
 
@@ -120,13 +110,9 @@ class GCodePathInterpreter {
     g90(args, lineNum) { this.relative = false }
     g91(args, lineNum) { this.relative = true }
 
+    // algorithm reference:
+    // https://github.com/NCalu/NCneticNpp/blob/main/NCneticCore/FAO.cs#L101
     calculateArcPoints(startPoint, endPoint, centerPoint, clockwise) {
-
-        console.log({
-            start: startPoint,
-            end: endPoint,
-            center: centerPoint
-        });
 
         function Vec(p0, p1) {
             return { x: p1.x - p0.x, y: p1.y - p0.y, z: p1.z - p0.z };
@@ -222,7 +208,7 @@ class GCodePathInterpreter {
 
             let xt = Normalize(v0);
             let zt = Normalize(v2);
-            //let dir = DotProduct(Vec({ x: 1, y: 1, z: 1 }, v2));
+            let dir = DotProduct({ x: 1, y: 1, z: 1 }, v2);
             let yt = CrossProduct(zt, xt);
 
             transformMatrix[0][0] = xt.x;
