@@ -9,7 +9,7 @@ class GCodePathInterpreter {
         this.scene = null;
         this.multiplier = 1.0;
         this.relative = false;
-        this.prevPoint = { x: 0, y: 0, z: 0 };
+        this.prevPoint = { x: 0, y: 0, z: 0, i: 0, j: 0, k: 0 };
     }
 
     // creates a path from
@@ -20,8 +20,6 @@ class GCodePathInterpreter {
 
         const parser = new GCodeParser();
         const parsed = parser.Parse(gcode);
-
-        console.log(parsed);
         
         const parent = this;
         parsed.forEach(x => {
@@ -39,16 +37,22 @@ class GCodePathInterpreter {
         if (args.X === undefined && args.Y === undefined && args.Z === undefined) {
             return;
         }
-        ret.x = (args.X * this.multiplier) || this.prevPoint.x;
-        ret.y = (args.Y * this.multiplier) || this.prevPoint.y;
-        ret.z = (args.Z * this.multiplier) || this.prevPoint.z;
-        if (args.I !== undefined) {
-            ret.i = args.I * this.multiplier;
-            ret.j = args.J * this.multiplier;
-            ret.k = args.K * this.multiplier;
-        }
-        
+        ret.x = (args.X) ? Math.round(args.X * this.multiplier * 10000) / 10000 : this.prevPoint.x;
+        ret.y = (args.Y) ? Math.round(args.Y * this.multiplier * 10000) / 10000 : this.prevPoint.y;
+        ret.z = (args.Z) ? Math.round(args.Z * this.multiplier * 10000) / 10000 : this.prevPoint.z;
+        ret.i = (args.I) ? Math.round(args.I * this.multiplier * 10000) / 10000 : this.prevPoint.i;
+        ret.j = (args.J) ? Math.round(args.J * this.multiplier * 10000) / 10000 : this.prevPoint.j;
+        ret.k = (args.K) ? Math.round(args.K * this.multiplier * 10000) / 10000 : this.prevPoint.k;
+
         return ret;
+    }
+
+    getCenterPoint(p0, p1) {
+        return {
+            x: Math.round((p0.x + p1.i) * 10000) / 10000,
+            y: Math.round((p0.y + p1.j) * 10000) / 10000,
+            z: Math.round((p0.z + p1.k) * 10000) / 10000
+        };
     }
 
     g0(args, lineNum) { this.g00(args, lineNum) }
@@ -58,11 +62,12 @@ class GCodePathInterpreter {
 
     g1(args, lineNum) { this.g01(args, lineNum) }
     g01(args, lineNum) {
-        const point = this.getScaledPoint(args);
-        if (point) {
-            const line = BABYLON.MeshBuilder.CreateLines(lineNum.toString(), { points: [this.prevPoint, point] }, this.scene);
+        const dest = this.getScaledPoint(args);
+        if (dest) {
+            const line = BABYLON.MeshBuilder.CreateLines(lineNum.toString(), { points: [this.prevPoint, dest] }, this.scene);
             line.color = new BABYLON.Color3(0, 0, 1)
-            this.prevPoint = point;
+            this.prevPoint = dest;
+;
         }
     }
 
@@ -72,9 +77,10 @@ class GCodePathInterpreter {
         const points = this.calculateArcPoints(
             this.prevPoint,
             dest,
-            { x: this.prevPoint.x + dest.i, y: this.prevPoint.y + dest.j, z: this.prevPoint.z + dest.k },
+            this.getCenterPoint(this.prevPoint, dest),
             true
         );
+
         //const p1 = new BABYLON.Vector3(this.prevPoint.x, this.prevPoint.y, this.prevPoint.z);
         //const p2 = new BABYLON.Vector3(midPoint.x, midPoint.y, midPoint.z);
         //const p3 = new BABYLON.Vector3(dest.x, dest.y, dest.z);
@@ -90,9 +96,10 @@ class GCodePathInterpreter {
         const points = this.calculateArcPoints(
             this.prevPoint,
             dest,
-            { x: this.prevPoint.x + dest.i, y: this.prevPoint.y + dest.j, z: this.prevPoint.z + dest.k },
+            this.getCenterPoint(this.prevPoint, dest),
             false
         );
+
         //const p1 = new BABYLON.Vector3(this.prevPoint.x, this.prevPoint.y, this.prevPoint.z);
         //const p2 = new BABYLON.Vector3(midPoint.x, midPoint.y, midPoint.z);
         //const p3 = new BABYLON.Vector3(dest.x, dest.y, dest.z);
@@ -100,6 +107,7 @@ class GCodePathInterpreter {
         const line = BABYLON.MeshBuilder.CreateLines(lineNum.toString(), { points: points }, this.scene);
         line.color = new BABYLON.Color3(0, 1, 0);
         this.prevPoint = dest;
+;
     }
 
     g17(args, lineNum) { }
@@ -113,6 +121,12 @@ class GCodePathInterpreter {
     g91(args, lineNum) { this.relative = true }
 
     calculateArcPoints(startPoint, endPoint, centerPoint, clockwise) {
+
+        console.log({
+            start: startPoint,
+            end: endPoint,
+            center: centerPoint
+        });
 
         function Vec(p0, p1) {
             return { x: p1.x - p0.x, y: p1.y - p0.y, z: p1.z - p0.z };
@@ -258,7 +272,8 @@ class GCodePathInterpreter {
         let nseg = parseInt(Math.ceil(Math.abs(a1 - a0) / da));
         let p0 = { x: startPoint.x, y: startPoint.y, z: startPoint.z };
         let invTransform = MatInverse(transformMatrix);
-        
+
+        points.push(startPoint);
         for (let i = 1; i <= nseg; i++) {
             let coords = {};
             // TODO: alt planes
@@ -266,7 +281,7 @@ class GCodePathInterpreter {
                 coords = {
                     x: invTransform[0][0] * (radius * Math.cos(a0 + i * (a1 - a0) / nseg)) + invTransform[0][1] * (radius * Math.sin(a0 + i * (a1 - a0) / nseg)) + centerPoint.x,
                     y: invTransform[1][0] * (radius * Math.cos(a0 + i * (a1 - a0) / nseg)) + invTransform[1][1] * (radius * Math.sin(a0 + i * (a1 - a0) / nseg)) + centerPoint.y,
-                    z: startPoint.z + i * (endPoint.z - startPoint.z / nseg)
+                    z: startPoint.z + i * (endPoint.z - startPoint.z ) / nseg
                 };
                 points.push(coords);
             }
