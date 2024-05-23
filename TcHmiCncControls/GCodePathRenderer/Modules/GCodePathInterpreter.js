@@ -20,13 +20,17 @@ class GCodePathInterpreter {
         const parsed = parser.Parse(gcode);
         
         const parent = this;
-        parsed.forEach(x => {
-            // exists method for gcode
-            const code = x.code.toLowerCase();
+        const points = parsed.reduce((arr, g) => {
+            const code = g.code.toLowerCase();
             if (parent[code]) {
-                parent[code](x.args, x.line);
+                const path = parent[code](g.args);
+                if (path)
+                    arr.push({ id: g.line, points: path });
             }
-        });
+            return arr;
+        }, []);
+
+        return points;
     }
 
     getScaledPoint(args) {
@@ -35,34 +39,33 @@ class GCodePathInterpreter {
         if (args.X === undefined && args.Y === undefined && args.Z === undefined) {
             return;
         }
-        ret.x = (args.X) ? Math.round(args.X * this.multiplier * 10000) / 10000 : this.prevPoint.x;
-        ret.y = (args.Y) ? Math.round(args.Y * this.multiplier * 10000) / 10000 : this.prevPoint.y;
-        ret.z = (args.Z) ? Math.round(args.Z * this.multiplier * 10000) / 10000 : this.prevPoint.z;
-        ret.i = (args.I) ? Math.round(args.I * this.multiplier * 10000) / 10000 : this.prevPoint.i;
-        ret.j = (args.J) ? Math.round(args.J * this.multiplier * 10000) / 10000 : this.prevPoint.j;
-        ret.k = (args.K) ? Math.round(args.K * this.multiplier * 10000) / 10000 : this.prevPoint.k;
+        ret.x = (args.X) ? (args.X * this.multiplier) : this.prevPoint.x;
+        ret.y = (args.Y) ? (args.Y * this.multiplier) : this.prevPoint.y;
+        ret.z = (args.Z) ? (args.Z * this.multiplier) : this.prevPoint.z;
+        ret.i = (args.I) ? (args.I * this.multiplier) : this.prevPoint.i;
+        ret.j = (args.J) ? (args.J * this.multiplier) : this.prevPoint.j;
+        ret.k = (args.K) ? (args.K * this.multiplier) : this.prevPoint.k;
 
         return ret;
     }
 
-    g0(args, lineNum) { this.g00(args, lineNum) }
-    g00(args, lineNum) {
-        this.g01(args, lineNum);
+    g0(args) { return this.g00(args) }
+    g00(args) {
+        return this.g01(args);
     }
 
-    g1(args, lineNum) { this.g01(args, lineNum) }
-    g01(args, lineNum) {
+    g1(args) { return this.g01(args) }
+    g01(args) {
         const dest = this.getScaledPoint(args);
         if (dest) {
-            const line = BABYLON.MeshBuilder.CreateLines(lineNum.toString(), { points: [this.prevPoint, dest] }, this.scene);
-            line.color = new BABYLON.Color3(0, 0, 1)
+            const ret = [this.prevPoint, dest];
             this.prevPoint = dest;
-;
+            return ret;
         }
     }
 
-    g2(args, lineNum) { this.g02(args, lineNum) }
-    g02(args, lineNum) {
+    g2(args) { return this.g02(args) }
+    g02(args) {
         const dest = this.getScaledPoint(args);
         const points = this.calculateArcPoints(
             this.prevPoint,
@@ -71,13 +74,12 @@ class GCodePathInterpreter {
             true
         );
 
-        const line = BABYLON.MeshBuilder.CreateLines(lineNum.toString(), { points: points }, this.scene);
-        line.color = new BABYLON.Color3(1, 0, 0);
         this.prevPoint = dest;
+        return points;
     }
 
-    g3(args, lineNum) { this.g03(args, lineNum) }
-    g03(args, lineNum) {
+    g3(args) { return this.g03(args) }
+    g03(args) {
         const dest = this.getScaledPoint(args);
         const points = this.calculateArcPoints(
             this.prevPoint,
@@ -86,21 +88,19 @@ class GCodePathInterpreter {
             false
         );
 
-        const line = BABYLON.MeshBuilder.CreateLines(lineNum.toString(), { points: points }, this.scene);
-        line.color = new BABYLON.Color3(0, 1, 0);
         this.prevPoint = dest;
-;
+        return points;
     }
 
-    g17(args, lineNum) { }
-    g28(args, lineNum) { }
+    g17(args) { }
+    g28(args) { }
 
     // 1-to-1 mm units in rendering
-    g70(args, lineNum) { this.multiplier = 25.4 }
-    g71(args, lineNum) { this.multiplier = 1.0 }
+    g70(args) { this.multiplier = 1.0 }
+    g71(args) { this.multiplier = 1.0 }
 
-    g90(args, lineNum) { this.relative = false }
-    g91(args, lineNum) { this.relative = true }
+    g90(args) { this.relative = false }
+    g91(args) { this.relative = true }
 
     // algorithm reference:
     // https://github.com/NCalu/NCneticNpp/blob/main/NCneticCore/FAO.cs#L101
@@ -265,118 +265,6 @@ class GCodePathInterpreter {
         }
 
         return points;
-    }
-
-    arcMidpoint3D(startPoint, endPoint, centerPoint, clockwise) {
-        // Helper function to subtract two vectors
-        function subtractVectors(a, b) {
-            return { x: a.x - b.x, y: a.y - b.y, z: a.z - b.z };
-        }
-
-        // Helper function to add two vectors
-        function addVectors(a, b) {
-            return { x: a.x + b.x, y: a.y + b.y, z: a.z + b.z };
-        }
-
-        // Helper function to scale a vector by a scalar
-        function scaleVector(v, s) {
-            return { x: v.x * s, y: v.y * s, z: v.z * s };
-        }
-
-        // Helper function to compute the cross product of two vectors
-        function crossProduct(a, b) {
-            return {
-                x: a.y * b.z - a.z * b.y,
-                y: a.z * b.x - a.x * b.z,
-                z: a.x * b.y - a.y * b.x
-            };
-        }
-
-        // Helper function to compute the dot product of two vectors
-        function dotProduct(a, b) {
-            return a.x * b.x + a.y * b.y + a.z * b.z;
-        }
-
-        // Helper function to compute the magnitude of a vector
-        function magnitude(v) {
-            return Math.sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
-        }
-
-        // Helper function to normalize a vector
-        function normalize(v) {
-            const mag = magnitude(v);
-            return { x: v.x / mag, y: v.y / mag, z: v.z / mag };
-        }
-
-        // Find vectors from center to start and end points
-        const startVector = subtractVectors(startPoint, centerPoint);
-        const endVector = subtractVectors(endPoint, centerPoint);
-
-        // Find the normal to the plane of the arc (cross product of start and end vectors)
-        const normal = normalize(crossProduct(startVector, endVector));
-
-        // Helper function to project a vector onto a plane defined by its normal
-        function projectOntoPlane(vector, planeNormal) {
-            const dot = dotProduct(vector, planeNormal);
-            const projection = subtractVectors(vector, scaleVector(planeNormal, dot));
-            return projection;
-        }
-
-        // Project the start and end vectors onto the plane
-        const projectedStart = normalize(projectOntoPlane(startVector, normal));
-        const projectedEnd = normalize(projectOntoPlane(endVector, normal));
-
-        // Helper function to calculate the angle between two vectors in the plane
-        function angleBetweenVectorsInPlane(v1, v2, planeNormal) {
-            const dot = dotProduct(v1, v2);
-            const cross = crossProduct(v1, v2);
-            const angle = Math.atan2(dotProduct(cross, planeNormal), dot);
-            return angle;
-        }
-
-        // Calculate the angle of the start and end vectors
-        const startAngle = Math.atan2(projectedStart.y, projectedStart.x);
-        const endAngle = Math.atan2(projectedEnd.y, projectedEnd.x);
-
-        // Normalize angles to be between 0 and 2 * PI
-        const twoPi = 2 * Math.PI;
-        let normalizedStartAngle = startAngle >= 0 ? startAngle : twoPi + startAngle;
-        let normalizedEndAngle = endAngle >= 0 ? endAngle : twoPi + endAngle;
-
-        // Calculate the midpoint angle
-        let midpointAngle;
-        if (clockwise) {
-            if (normalizedStartAngle < normalizedEndAngle) {
-                normalizedStartAngle += twoPi;
-            }
-            midpointAngle = (normalizedStartAngle + normalizedEndAngle) / 2;
-        } else {
-            if (normalizedEndAngle < normalizedStartAngle) {
-                normalizedEndAngle += twoPi;
-            }
-            midpointAngle = (normalizedStartAngle + normalizedEndAngle) / 2;
-        }
-
-        // Ensure the midpoint angle is within the range [0, 2 * PI]
-        midpointAngle = midpointAngle % twoPi;
-
-        // Convert the midpoint angle back to Cartesian coordinates on the plane
-        const radius = magnitude(startVector);
-        const midpoint2D = {
-            x: radius * Math.cos(midpointAngle),
-            y: radius * Math.sin(midpointAngle)
-        };
-
-        // Convert the 2D midpoint back to 3D coordinates
-        const midpointVector = addVectors(
-            centerPoint,
-            addVectors(
-                scaleVector(projectedStart, Math.cos(midpointAngle)),
-                scaleVector(crossProduct(normal, projectedStart), Math.sin(midpointAngle))
-            )
-        );
-
-        return midpointVector;
     }
 }
 

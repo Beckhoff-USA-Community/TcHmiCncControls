@@ -36,6 +36,7 @@ var TcHmi;
 
                     this.__elementCanvas = null;
                     this.__engine = null;
+                    this.__scene = null;
 
                     this.__pathString = "";
                     this.__relativeMode = false;
@@ -43,7 +44,7 @@ var TcHmi;
 
                     // constants
                     this.__VIEWS = [
-                        { name: "camera0", alpha: 1.2, beta: 1.2, radius: 75, target: new BABYLON.Vector3(0, 0, 0) },
+                        { name: "camera0", alpha: 1.2, beta: 1.2, radius: 7, target: new BABYLON.Vector3(0, 0, 0) },
                         { name: "camera1", alpha: 2, beta: 1.2, radius: 7, target: new BABYLON.Vector3(0, 0, 0) },
                         { name: "camera2", alpha: -1.2, beta: 1.2, radius: 7, target: new BABYLON.Vector3(0, 0, 0) },
                         { name: "camera3", alpha: -2, beta: 1.2, radius: 7, target: new BABYLON.Vector3(0, 0, 0) }
@@ -77,35 +78,7 @@ var TcHmi;
                  */
                 __init() {
                     super.__init();
-
-                    // init babylon scene
-                    if (this.__engine) {
-
-                        // generate scene
-                        const engine = this.__engine;
-                        const scene = this.__createScene();
-
-                        // register render loop
-                        engine.runRenderLoop(function () {
-                            scene.render();
-                        });
-
-                        // resize engine on window resize
-                        window.addEventListener("resize", function () {
-                            engine.resize();
-                        });
-
-                        // give time for init, then resize
-                        setTimeout(() => { engine.resize(); }, 500);
-
-                        scene.onPointerObservable.add((pointerInfo) => {
-                            if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERDOWN) {
-                                if (pointerInfo.pickInfo.hit) {
-                                    this.__onMeshPicked(pointerInfo.pickInfo.pickedMesh)
-                                }
-                            }
-                        });
-                    }
+                    this.__initScene();
                 }
                 /**
                  * Is called by the system after the control instance is inserted into the active DOM.
@@ -130,59 +103,98 @@ var TcHmi;
                      */
                 }
 
+                __initScene() {
+                    // init babylon scene
+                    if (this.__engine) {
+
+                        if (this.__scene) {
+                            this.__scene.dispose();
+                        }
+
+                        // generate scene
+                        const engine = this.__engine;
+
+                        // create scene
+                        const scene = new BABYLON.Scene(this.__engine);
+
+                        // init camera from view array
+                        const camera = new BABYLON.ArcRotateCamera(
+                            this.__VIEWS[0].name,
+                            this.__VIEWS[0].alpha,
+                            this.__VIEWS[0].beta,
+                            this.__VIEWS[0].radius,
+                            this.__VIEWS[0].target,
+                            scene
+                        );
+
+                        // attach mouse controls to camera
+                        camera.attachControl();
+                        let prevRadius = camera.radius;
+
+                        // This targets the camera to scene origin
+                        camera.setTarget(BABYLON.Vector3.Zero());
+
+                        camera.wheelPrecision = 30;
+                        scene.beforeRender = () => {
+                            let ratio = 1;
+                            if (prevRadius != camera.radius) {
+                                ratio = prevRadius / camera.radius;
+                                prevRadius = camera.radius;
+
+                                camera.panningSensibility *= ratio;
+                                camera.wheelPrecision *= ratio;
+                            }
+                        };
+
+                        // This creates a light, aiming 0,1,0 - to the sky (non-mesh)
+                        var light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+
+                        // Default intensity is 1. Let's dim the light a small amount
+                        light.intensity = 0.7;
+
+                        const axes = new BABYLON.Debug.AxesViewer(scene, 1)
+
+                        // register render loop
+                        engine.runRenderLoop(function () {
+                            scene.render();
+                        });
+
+                        // resize engine on window resize
+                        window.addEventListener("resize", function () {
+                            engine.resize();
+                        });
+
+                        // give time for init, then resize
+                        setTimeout(() => { engine.resize(); }, 500);
+
+                        scene.onPointerObservable.add((pointerInfo) => {
+                            if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERDOWN) {
+                                if (pointerInfo.pickInfo.hit) {
+                                    this.__onMeshPicked(pointerInfo.pickInfo.pickedMesh);
+                                }
+                            }
+                        });
+
+                        this.__scene = scene;
+                    }
+                }
+
                 __onMeshPicked(mesh) {
                     this.__selectedMeshId = parseInt(mesh.id);
                     TcHmi.EventProvider.raise(`${this.getId()}.onPathSegmentPressed`);
                 }
 
-                __createScene() {
-                    // create scene
-                    const scene = new BABYLON.Scene(this.__engine);
-                    
-                    // init camera from view array
-                    const camera = new BABYLON.ArcRotateCamera(
-                        this.__VIEWS[0].name,
-                        this.__VIEWS[0].alpha,
-                        this.__VIEWS[0].beta,
-                        this.__VIEWS[0].radius,
-                        this.__VIEWS[0].target,
-                        scene
-                    );
-
-                    // attach mouse controls to camera
-                    camera.attachControl();
-                    let prevRadius = camera.radius;
-
-                    // This targets the camera to scene origin
-                    camera.setTarget(BABYLON.Vector3.Zero());
-
-                    camera.wheelPrecision = 10;
-                    scene.beforeRender = () => {
-                        let ratio = 10;
-                        if (prevRadius != camera.radius) {
-                            ratio = prevRadius / camera.radius;
-                            prevRadius = camera.radius;
-
-                            camera.panningSensibility *= ratio;
-                            camera.wheelPrecision *= ratio;
-                        }
-                    };
-
-                    // This creates a light, aiming 0,1,0 - to the sky (non-mesh)
-                    var light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
-
-                    // Default intensity is 1. Let's dim the light a small amount
-                    light.intensity = 0.7;
-
-                    const axes = new BABYLON.Debug.AxesViewer(scene, 20)
-
-                    return scene;
-                }
-
                 __parseGCode(gcode) {
-                    
+                    this.__initScene();
                     const interpreter = new GCodePathInterpreter();
-                    interpreter.trace(gcode, this.__engine.scene);
+                    const path = interpreter.trace(gcode, this.__engine.scene);
+                    path.forEach(p => {
+                        const line = BABYLON.MeshBuilder.CreateLines(p.id, { points: p.points }, this.scene);
+                        if (p.points.length > 2)
+                            line.color = new BABYLON.Color3(1, 0, 0);
+                        else
+                            line.color = new BABYLON.Color3(0, 0, 1);
+                    });
                 }
 
                 /**

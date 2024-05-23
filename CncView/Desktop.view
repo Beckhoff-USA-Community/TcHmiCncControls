@@ -2,7 +2,7 @@
   <div id="ViewDesktopBeckhoffLogo" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiImage" data-tchmi-src="Images/Beckhoff_Logo.svg" data-tchmi-left="20" data-tchmi-top="20" data-tchmi-width="194" data-tchmi-height="57">
 
   </div>
-<div id="GCodeEditor" data-tchmi-type="TcHmi.Controls.TcHmiCncControls.GCodeEditor" data-tchmi-height="486" data-tchmi-height-unit="px" data-tchmi-left="321" data-tchmi-left-unit="px" data-tchmi-top="115" data-tchmi-top-unit="px" data-tchmi-width="433" data-tchmi-width-unit="px" data-tchmi-font-size="18">
+<div id="GCodeEditor" data-tchmi-type="TcHmi.Controls.TcHmiCncControls.GCodeEditor" data-tchmi-height="486" data-tchmi-height-unit="px" data-tchmi-left="321" data-tchmi-left-unit="px" data-tchmi-top="115" data-tchmi-top-unit="px" data-tchmi-width="433" data-tchmi-width-unit="px" data-tchmi-font-size="18" data-tchmi-read-only="false">
 
 <script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
 [
