@@ -2,7 +2,7 @@
   <div id="ViewDesktopBeckhoffLogo" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiImage" data-tchmi-src="Images/Beckhoff_Logo.svg" data-tchmi-left="20" data-tchmi-top="20" data-tchmi-width="194" data-tchmi-height="57">
 
   </div>
-<div id="GCodeEditor" data-tchmi-type="TcHmi.Controls.TcHmiCncControls.GCodeEditor" data-tchmi-height="486" data-tchmi-height-unit="px" data-tchmi-left="321" data-tchmi-left-unit="px" data-tchmi-top="115" data-tchmi-top-unit="px" data-tchmi-width="433" data-tchmi-width-unit="px" data-tchmi-font-size="18" data-tchmi-read-only="false">
+<div id="GCodeEditor" data-tchmi-type="TcHmi.Controls.TcHmiCncControls.GCodeEditor" data-tchmi-height="486" data-tchmi-height-unit="px" data-tchmi-left="321" data-tchmi-left-unit="px" data-tchmi-top="115" data-tchmi-top-unit="px" data-tchmi-width="398" data-tchmi-width-unit="px" data-tchmi-font-size="18" data-tchmi-read-only="false">
 
 <script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
 [
@@ -72,7 +72,7 @@
 ]
 </script>
 </div>
-<div id="TcHmiTextblock" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-height="26" data-tchmi-height-unit="px" data-tchmi-left="240" data-tchmi-left-unit="px" data-tchmi-text="Textblock" data-tchmi-top="611" data-tchmi-top-unit="px" data-tchmi-width="370" data-tchmi-width-unit="px" data-tchmi-word-wrap="true">
+<div id="TcHmiTextblock" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-height="26" data-tchmi-height-unit="px" data-tchmi-left="240" data-tchmi-left-unit="px" data-tchmi-text="Textblock" data-tchmi-top="611" data-tchmi-top-unit="px" data-tchmi-width="336" data-tchmi-width-unit="px" data-tchmi-word-wrap="true">
 </div>
 <div id="TcHmiButton_1" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiButton" data-tchmi-height="50" data-tchmi-height-unit="px" data-tchmi-left="130" data-tchmi-left-unit="px" data-tchmi-text="Save" data-tchmi-top="611" data-tchmi-top-unit="px" data-tchmi-width="100" data-tchmi-width-unit="px" data-tchmi-word-wrap="true">
 <script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
@@ -103,7 +103,7 @@
 </script>
 
 </div>
-<div id="GCodePathRenderer" data-tchmi-type="TcHmi.Controls.TcHmiCncControls.GCodePathRenderer" data-tchmi-height="486" data-tchmi-height-unit="px" data-tchmi-left="764" data-tchmi-left-unit="px" data-tchmi-top="115" data-tchmi-top-unit="px" data-tchmi-width="506" data-tchmi-width-unit="px" data-tchmi-render-progress="true" data-tchmi-selected-mesh="%ctrl%GCodeEditor::SelectedLine%/ctrl%">
+<div id="GCodePathRenderer" data-tchmi-type="TcHmi.Controls.TcHmiCncControls.GCodePathRenderer" data-tchmi-height="486" data-tchmi-height-unit="px" data-tchmi-left="729" data-tchmi-left-unit="px" data-tchmi-top="115" data-tchmi-top-unit="px" data-tchmi-width="541" data-tchmi-width-unit="px" data-tchmi-render-progress="true" data-tchmi-selected-mesh="%ctrl%GCodeEditor::SelectedLine%/ctrl%">
 
 
 
@@ -133,7 +133,7 @@
 ]
 </script>
 </div>
-<div id="TcHmiButton_3" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiButton" data-tchmi-height="50" data-tchmi-height-unit="px" data-tchmi-left="654" data-tchmi-left-unit="px" data-tchmi-text="Render" data-tchmi-top="611" data-tchmi-top-unit="px" data-tchmi-width="100" data-tchmi-width-unit="px" data-tchmi-word-wrap="true">
+<div id="TcHmiButton_3" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiButton" data-tchmi-height="50" data-tchmi-height-unit="px" data-tchmi-left="619" data-tchmi-left-unit="px" data-tchmi-text="Render" data-tchmi-top="611" data-tchmi-top-unit="px" data-tchmi-width="100" data-tchmi-width-unit="px" data-tchmi-word-wrap="true">
 <script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
 [
   {

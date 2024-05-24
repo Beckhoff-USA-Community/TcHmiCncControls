@@ -4,7 +4,6 @@
 class GCodePathInterpreter {
 
     constructor(scene) {
-        this.scene = null;
         this.multiplier = 1.0;
         this.relative = false;
         this.prevPoint = { x: 0, y: 0, z: 0, i: 0, j: 0, k: 0 };
@@ -12,13 +11,13 @@ class GCodePathInterpreter {
 
     // creates a path from
     // parsed GCode object array
-    trace(gcode, scene) {
-        if (scene)
-            this.scene = scene;
+    Trace(gcode) {
 
+        // parse
         const parser = new GCodeParser();
         const parsed = parser.Parse(gcode);
-        
+
+        // reduce into { id: #, points: [] } object array
         const parent = this;
         const points = parsed.reduce((arr, g) => {
             const code = g.code.toLowerCase();
@@ -33,6 +32,8 @@ class GCodePathInterpreter {
         return points;
     }
 
+    // parse args and scale units
+    // TODO: implement relative positioning
     getScaledPoint(args) {
         let ret = {};
 

@@ -103,8 +103,8 @@ var TcHmi;
                      */
                 }
 
+                // init / re-init babylon scene
                 __initScene() {
-                    // init babylon scene
                     if (this.__engine) {
 
                         if (this.__scene) {
@@ -153,6 +153,7 @@ var TcHmi;
                         // give time for init, then resize
                         setTimeout(() => { engine.resize(); }, 500);
 
+                        // mesh onClick event
                         scene.onPointerObservable.add((pointerInfo) => {
                             if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERDOWN) {
                                 if (pointerInfo.pickInfo.hit) {
@@ -165,21 +166,25 @@ var TcHmi;
                     }
                 }
 
+                // mesh clicked handler
                 __onMeshPicked(mesh) {
                     this.__selectedMeshId = parseInt(mesh.id);
                     TcHmi.EventProvider.raise(`${this.getId()}.onPathSegmentPressed`);
                 }
 
                 __parseGCode(gcode) {
+                    
                     this.__initScene();
                     const interpreter = new GCodePathInterpreter();
-                    const path = interpreter.trace(gcode, this.__engine.scene);
+                    const path = interpreter.Trace(gcode);
+                    // draw path
                     path.forEach(p => {
                         const line = BABYLON.MeshBuilder.CreateLines(p.id, { points: p.points }, this.scene);
                         line.color = new BABYLON.Color3(1, 0, 0);
                     });
                 }
 
+                // set mesh colors based on id
                 __updateRendering(id) {
                     this.__scene.meshes.forEach(m => {
                         if (m.id <= id) {
