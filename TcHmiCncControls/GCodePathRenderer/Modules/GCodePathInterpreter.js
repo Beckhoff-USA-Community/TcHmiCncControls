@@ -106,100 +106,40 @@ class GCodePathInterpreter {
     // https://github.com/NCalu/NCneticNpp/blob/main/NCneticCore/FAO.cs#L101
     calculateArcPoints(startPoint, endPoint, centerPoint, clockwise) {
 
-        function Vec(p0, p1) {
-            return { x: p1.x - p0.x, y: p1.y - p0.y, z: p1.z - p0.z };
-        }
-
-        function CrossProduct(v0, v1) {
-            return {
-                x: v0.y * v1.z - v0.z * v1.y,
-                y: -v0.x * v1.z + v0.z * v1.x,
-                z: v0.x * v1.y - v0.y * v1.x
-            };
-        }
-
-        function MatProduct(m, v) {
-            return {
-                x: m[0][0] * v.x + m[0][1] * v.y + m[0][2] * v.z,
-                y: m[1][0] * v.x + m[1][1] * v.y + m[1][2] * v.z,
-                z: m[2][0] * v.x + m[2][1] * v.y + m[2][2] * v.z,
-            };
-        }
-
-        function MatInverse(m) {
-
-            let iv = new Array(3);
-            iv[0] = new Array(3); iv[1] = new Array(3); iv[2] = new Array(3);
-
-            const det = MatDet(m);
-
-            iv[0][0] = (m[1][1] * m[2][2] - m[1][2] * m[2][1]) / det;
-            iv[0][1] = -(m[0][1] * m[2][2] - m[0][2] * m[2][1]) / det;
-            iv[0][2] = (m[0][1] * m[1][2] - m[0][2] * m[1][1]) / det;
-                  
-            iv[1][0] = -(m[1][0] * m[2][2] - m[1][2] * m[2][0]) / det;
-            iv[1][1] = (m[0][0] * m[2][2] - m[0][2] * m[2][0]) / det;
-            iv[1][2] = -(m[0][0] * m[1][2] - m[0][2] * m[1][0]) / det;
-                  
-            iv[2][0] = (m[1][0] * m[2][1] - m[1][1] * m[2][0]) / det;
-            iv[2][1] = -(m[0][0] * m[2][1] - m[0][1] * m[2][0]) / det;
-            iv[2][2] = (m[0][0] * m[1][1] - m[0][1] * m[1][0]) / det;
-
-            return iv;
-        }
-
-        function MatDet(m) {
-            return m[0][0] * m[1][1] * m[2][2] + m[0][1] * m[1][2] * m[2][0] +
-                m[0][2] * m[1][0] * m[2][1] - m[0][2] * m[1][1] * m[2][0] -
-                m[0][1] * m[1][0] * m[2][2] - m[0][0] * m[1][2] * m[2][1];
-        }
-
-        function DotProduct(v0, v1) {
-            return v0.x * v1.x + v0.y * v1.y + v0.z * v1.z;
-        }
-
-        function VecNorm(v) {
-            return Math.sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
-        }
-
-        function Normalize(v) {
-            const norm = VecNorm(v);
-            return { x: v.x / norm, y: v.y / norm, z: v.z / norm };
-        }
-
+        const m = this.VectorHelpers;
         let points = [];
 
-        let v0 = Vec(centerPoint, startPoint);
-        let v1 = Vec(centerPoint, endPoint);
-        let v2 = CrossProduct(v0, v1);
+        let v0 = m.Vector(centerPoint, startPoint);
+        let v1 = m.Vector(centerPoint, endPoint);
+        let v2 = m.VectorCrossProduct(v0, v1);
 
         // TODO: XZ / YZ working planes
         // XY plane
         if (true) {
-            v0 = Vec({ x: centerPoint.x, y: centerPoint.y, z: startPoint.z }, startPoint);
-            v1 = Vec(
+            v0 = m.Vector({ x: centerPoint.x, y: centerPoint.y, z: startPoint.z }, startPoint);
+            v1 = m.Vector(
                 { x: centerPoint.x, y: centerPoint.y, z: startPoint.z },
                 { x: endPoint.x, y: endPoint.y, z: startPoint.z }
             );
-            v2 = CrossProduct(v0, v1);
+            v2 = m.VectorCrossProduct(v0, v1);
         }
 
-        v2 = Normalize(v2);
+        v2 = m.VectorNormalize(v2);
 
         let transformMatrix = [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]];
 
         // TODO: XZ / YZ working planes
         // XY plane
         if (true) {
-            v2 = Vec({ x: 0, y: 0, z: 0 }, { x: 0, y: 0, z: 1 });
+            v2 = m.Vector({ x: 0, y: 0, z: 0 }, { x: 0, y: 0, z: 1 });
         }
 
-        if (VecNorm(Normalize(v2)) !== 0) {
+        if (m.VectorNormal(m.VectorNormalize(v2)) !== 0) {
 
-            let xt = Normalize(v0);
-            let zt = Normalize(v2);
-            let dir = DotProduct({ x: 1, y: 1, z: 1 }, v2);
-            let yt = CrossProduct(zt, xt);
+            let xt = m.VectorNormalize(v0);
+            let zt = m.VectorNormalize(v2);
+            let dir = m.VectorDotProduct({ x: 1, y: 1, z: 1 }, v2);
+            let yt = m.VectorCrossProduct(zt, xt);
 
             transformMatrix[0][0] = xt.x;
             transformMatrix[0][1] = xt.y;
@@ -216,10 +156,10 @@ class GCodePathInterpreter {
             // return original move
         }
 
-        let v0t = MatProduct(transformMatrix, v0);
-        let v1t = MatProduct(transformMatrix, v1);
+        let v0t = m.MatrixVectorProduct(transformMatrix, v0);
+        let v1t = m.MatrixVectorProduct(transformMatrix, v1);
 
-        let radius = VecNorm(v0t);
+        let radius = m.VectorNormal(v0t);
         let a0 = Math.atan2(v0t.y, v0t.x);
         let a1 = Math.atan2(v1t.y, v1t.x);
 
@@ -247,7 +187,7 @@ class GCodePathInterpreter {
         let da = 2 * Math.PI / 64;
         let nseg = parseInt(Math.ceil(Math.abs(a1 - a0) / da));
         let p0 = { x: startPoint.x, y: startPoint.y, z: startPoint.z };
-        let invTransform = MatInverse(transformMatrix);
+        let invTransform = m.MatrixInverse(transformMatrix);
 
         points.push(startPoint);
         for (let i = 1; i <= nseg; i++) {
@@ -265,6 +205,63 @@ class GCodePathInterpreter {
         }
 
         return points;
+    }
+
+    // Vector and matrix helper functions
+    VectorHelpers = {
+        Vector: function(p0, p1) {
+            return { x: p1.x - p0.x, y: p1.y - p0.y, z: p1.z - p0.z };
+        },
+        VectorCrossProduct: function(v0, v1) {
+            return {
+                x: v0.y * v1.z - v0.z * v1.y,
+                y: -v0.x * v1.z + v0.z * v1.x,
+                z: v0.x * v1.y - v0.y * v1.x
+            };
+        },
+        MatrixVectorProduct: function(m, v) {
+            return {
+                x: m[0][0] * v.x + m[0][1] * v.y + m[0][2] * v.z,
+                y: m[1][0] * v.x + m[1][1] * v.y + m[1][2] * v.z,
+                z: m[2][0] * v.x + m[2][1] * v.y + m[2][2] * v.z,
+            };
+        },
+        MatrixInverse: function(m) {
+
+            let iv = new Array(3);
+            iv[0] = new Array(3); iv[1] = new Array(3); iv[2] = new Array(3);
+
+            const det = this.MatrixDet(m);
+
+            iv[0][0] = (m[1][1] * m[2][2] - m[1][2] * m[2][1]) / det;
+            iv[0][1] = -(m[0][1] * m[2][2] - m[0][2] * m[2][1]) / det;
+            iv[0][2] = (m[0][1] * m[1][2] - m[0][2] * m[1][1]) / det;
+
+            iv[1][0] = -(m[1][0] * m[2][2] - m[1][2] * m[2][0]) / det;
+            iv[1][1] = (m[0][0] * m[2][2] - m[0][2] * m[2][0]) / det;
+            iv[1][2] = -(m[0][0] * m[1][2] - m[0][2] * m[1][0]) / det;
+
+            iv[2][0] = (m[1][0] * m[2][1] - m[1][1] * m[2][0]) / det;
+            iv[2][1] = -(m[0][0] * m[2][1] - m[0][1] * m[2][0]) / det;
+            iv[2][2] = (m[0][0] * m[1][1] - m[0][1] * m[1][0]) / det;
+
+            return iv;
+        },
+        MatrixDet: function(m) {
+            return m[0][0] * m[1][1] * m[2][2] + m[0][1] * m[1][2] * m[2][0] +
+                m[0][2] * m[1][0] * m[2][1] - m[0][2] * m[1][1] * m[2][0] -
+                m[0][1] * m[1][0] * m[2][2] - m[0][0] * m[1][2] * m[2][1];
+        },
+        VectorDotProduct: function(v0, v1) {
+            return v0.x * v1.x + v0.y * v1.y + v0.z * v1.z;
+        },
+        VectorNormal: function(v) {
+            return Math.sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
+        },
+        VectorNormalize: function(v) {
+            const norm = this.VectorNormal(v);
+            return { x: v.x / norm, y: v.y / norm, z: v.z / norm };
+        }
     }
 }
 

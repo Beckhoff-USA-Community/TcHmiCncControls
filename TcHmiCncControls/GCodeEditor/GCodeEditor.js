@@ -66,10 +66,15 @@ var TcHmi;
                         this.__editor.session.setMode("ace/mode/gcode");
                         this.__editor.setFontSize(this.__fontSize ?? 16);
 
+                        // selected line changed event
                         const ctrl = this;
                         this.__editor.on("changeSelection", function () {
-                            ctrl.__selectedLine = ctrl.__editor.selection.getRange().start.row || 0;
-                            TcHmi.EventProvider.raise(`${ctrl.getId()}.onLineSelectionChanged`);
+                            if (ctrl.__selectedLine !== ctrl.__editor.selection.getRange().start.row) {
+                                ctrl.__selectedLine = ctrl.__editor.selection.getRange().start.row || 0;
+                                TcHmi.EventProvider.raise(`${ctrl.getId()}.onPropertyChanged`, {
+                                    propertyName: "SelectedLine",
+                                });
+                            }
                         });
                     }
                     
@@ -225,7 +230,7 @@ var TcHmi;
                 }
 
                 getSelectedLine() {
-                    return this.__selectedLine;
+                    return this.__selectedLine + 1;
                 }
             }
             TcHmiCncControls.GCodeEditor = GCodeEditor;

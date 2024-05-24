@@ -39,8 +39,8 @@ var TcHmi;
                     this.__scene = null;
 
                     this.__pathString = "";
-                    this.__relativeMode = false;
                     this.__selectedMeshId = 0;
+                    this.__renderProgress = false;
 
                     // constants
                     this.__VIEWS = [
@@ -129,28 +129,14 @@ var TcHmi;
 
                         // attach mouse controls to camera
                         camera.attachControl();
-                        let prevRadius = camera.radius;
 
                         // This targets the camera to scene origin
                         camera.setTarget(BABYLON.Vector3.Zero());
-
                         camera.wheelPrecision = 30;
-                        scene.beforeRender = () => {
-                            let ratio = 1;
-                            if (prevRadius != camera.radius) {
-                                ratio = prevRadius / camera.radius;
-                                prevRadius = camera.radius;
-
-                                camera.panningSensibility *= ratio;
-                                camera.wheelPrecision *= ratio;
-                            }
-                        };
 
                         // This creates a light, aiming 0,1,0 - to the sky (non-mesh)
                         var light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
-
-                        // Default intensity is 1. Let's dim the light a small amount
-                        light.intensity = 0.7;
+                        light.intensity = 0.8;
 
                         const axes = new BABYLON.Debug.AxesViewer(scene, 1)
 
@@ -190,10 +176,17 @@ var TcHmi;
                     const path = interpreter.trace(gcode, this.__engine.scene);
                     path.forEach(p => {
                         const line = BABYLON.MeshBuilder.CreateLines(p.id, { points: p.points }, this.scene);
-                        if (p.points.length > 2)
-                            line.color = new BABYLON.Color3(1, 0, 0);
-                        else
-                            line.color = new BABYLON.Color3(0, 0, 1);
+                        line.color = new BABYLON.Color3(1, 0, 0);
+                    });
+                }
+
+                __updateRendering(id) {
+                    this.__scene.meshes.forEach(m => {
+                        if (m.id <= id) {
+                            m.color = new BABYLON.Color3(0, 1, 0);
+                        } else {
+                            m.color = new BABYLON.Color3(1, 0, 0);
+                        }
                     });
                 }
 
@@ -214,14 +207,29 @@ var TcHmi;
                      */
                 }
 
-                setPath(path) {
-                    this.__pathString = path;
-                    if (path.length)
-                        this.__parseGCode(path);
+                setPath(value) {
+                    this.__pathString = value;
+                    if (value.length)
+                        this.__parseGCode(value);
                 }
 
                 getSelectedMeshId() {
                     return this.__selectedMeshId;
+                }
+
+                setSelectedMeshId(value) {
+                    this.__selectedMeshId = value;
+                    if (this.__renderProgress) {
+                        this.__updateRendering(value);
+                    }
+                }
+
+                getRenderProgress() {
+                    return this.__renderProgress;
+                }
+
+                setRenderProgress(value) {
+                    this.__renderProgress = value;
                 }
             }
             TcHmiCncControls.GCodePathRenderer = GCodePathRenderer;

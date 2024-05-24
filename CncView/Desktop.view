@@ -24,22 +24,6 @@
         "asyncWait": true
       }
     ]
-  },
-  {
-    "event": "GCodeEditor.onLineSelectionChanged",
-    "actions": [
-      {
-        "objectType": "WriteToSymbol",
-        "active": true,
-        "symbolExpression": "%ctrl%TcHmiTextblock_1::Text%/ctrl%",
-        "value": {
-          "objectType": "Symbol",
-          "valueType": "tchmi:general#/definitions/String",
-          "symbolExpression": "%f%%ctrl%GCodeEditor::selectedLine%/ctrl%%/f%"
-        },
-        "asyncWait": true
-      }
-    ]
   }
 ]
 </script>
@@ -119,7 +103,7 @@
 </script>
 
 </div>
-<div id="GCodePathRenderer" data-tchmi-type="TcHmi.Controls.TcHmiCncControls.GCodePathRenderer" data-tchmi-height="486" data-tchmi-height-unit="px" data-tchmi-left="764" data-tchmi-left-unit="px" data-tchmi-top="115" data-tchmi-top-unit="px" data-tchmi-width="473" data-tchmi-width-unit="px">
+<div id="GCodePathRenderer" data-tchmi-type="TcHmi.Controls.TcHmiCncControls.GCodePathRenderer" data-tchmi-height="486" data-tchmi-height-unit="px" data-tchmi-left="764" data-tchmi-left-unit="px" data-tchmi-top="115" data-tchmi-top-unit="px" data-tchmi-width="506" data-tchmi-width-unit="px" data-tchmi-render-progress="true" data-tchmi-selected-mesh="%ctrl%GCodeEditor::SelectedLine%/ctrl%">
 
 
 
@@ -138,8 +122,8 @@
         "fnParams": [
           {
             "objectType": "Symbol",
-            "valueType": "tchmi:general#/definitions/Number",
-            "symbolExpression": "%ctrl%GCodePathRenderer::selectedMeshId%/ctrl%"
+            "valueType": "tchmi:general#/definitions/String",
+            "symbolExpression": "%ctrl%GCodePathRenderer::SelectedMeshId%/ctrl%"
           }
         ],
         "asyncWait": true
@@ -164,7 +148,7 @@
           {
             "objectType": "Symbol",
             "valueType": "tchmi:general#/definitions/String",
-            "symbolExpression": "%ctrl%GCodeEditor::content%/ctrl%"
+            "symbolExpression": "%ctrl%GCodeEditor::Content%/ctrl%"
           }
         ],
         "asyncWait": true
@@ -173,7 +157,5 @@
   }
 ]
 </script>
-</div>
-<div id="TcHmiTextblock_1" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-height="26" data-tchmi-height-unit="px" data-tchmi-left="321" data-tchmi-left-unit="px" data-tchmi-top="80" data-tchmi-top-unit="px" data-tchmi-width="370" data-tchmi-width-unit="px" data-tchmi-word-wrap="true">
 </div>
 </div>

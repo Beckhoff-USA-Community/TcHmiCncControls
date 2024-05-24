@@ -79,18 +79,32 @@
     },
   "attributes": [
     {
-      "displayName": "SelectedMesh",
+      "displayName": "Selected Mesh",
       "name": "data-tchmi-selected-mesh",
       "propertyGetterName": "getSelectedMeshId",
-      "propertyName": "selectedMeshId",
+      "propertySetterName": "setSelectedMeshId",
+      "propertyName": "SelectedMeshId",
       "type": "tchmi:general#/definitions/Number",
       "category": "Common",
-      "readOnly": true,
       "bindable": true,
       "visible": true,
       "defaultValue": 0,
       "defaultValueInternal": 0,
-      "description": "Returns last selected (clicked or pressed) mesh number."
+      "description": "Gets or sets the selected segment."
+    },
+    {
+      "displayName": "Render Progress",
+      "name": "data-tchmi-render-progress",
+      "propertyGetterName": "getRenderProgress",
+      "propertySetterName": "setRenderProgress",
+      "propertyName": "RenderProgress",
+      "type": "tchmi:general#/definitions/Boolean",
+      "category": "Common",
+      "bindable": true,
+      "visible": true,
+      "defaultValue": false,
+      "defaultValueInternal": false,
+      "description": "Gets or sets rendering based on selected segment mesh Id."
     }
   ],
   "attributeCategories": [],
