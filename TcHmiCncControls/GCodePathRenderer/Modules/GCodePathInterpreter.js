@@ -7,6 +7,9 @@ class GCodePathInterpreter {
         this.multiplier = 1.0;
         this.relative = false;
         this.prevPoint = { x: 0, y: 0, z: 0, i: 0, j: 0, k: 0 };
+        // TODO: fancy ijk relative calculation like NCnetic?
+        this.ijkRelative = false;
+        this.MAX_ARC_POINTS = 64;
     }
 
     // creates a path from
@@ -24,7 +27,7 @@ class GCodePathInterpreter {
             if (parent[code]) {
                 const path = parent[code](g.args);
                 if (path)
-                    arr.push({ id: g.line, points: path });
+                    arr.push({ code: code, id: g.line, points: path });
             }
             return arr;
         }, []);
@@ -40,12 +43,12 @@ class GCodePathInterpreter {
         if (args.X === undefined && args.Y === undefined && args.Z === undefined) {
             return;
         }
-        ret.x = (args.X) ? (args.X * this.multiplier) : this.prevPoint.x;
-        ret.y = (args.Y) ? (args.Y * this.multiplier) : this.prevPoint.y;
-        ret.z = (args.Z) ? (args.Z * this.multiplier) : this.prevPoint.z;
-        ret.i = (args.I) ? (args.I * this.multiplier) : this.prevPoint.i;
-        ret.j = (args.J) ? (args.J * this.multiplier) : this.prevPoint.j;
-        ret.k = (args.K) ? (args.K * this.multiplier) : this.prevPoint.k;
+        ret.x = (args.X !== undefined) ? (args.X * this.multiplier) : this.prevPoint.x;
+        ret.y = (args.Y !== undefined) ? (args.Y * this.multiplier) : this.prevPoint.y;
+        ret.z = (args.Z !== undefined) ? (args.Z * this.multiplier) : this.prevPoint.z;
+        ret.i = (args.I !== undefined) ? (args.I * this.multiplier) : this.prevPoint.i;
+        ret.j = (args.J !== undefined) ? (args.J * this.multiplier) : this.prevPoint.j;
+        ret.k = (args.K !== undefined) ? (args.K * this.multiplier) : this.prevPoint.k;
 
         return ret;
     }
@@ -105,7 +108,13 @@ class GCodePathInterpreter {
 
     // algorithm reference:
     // https://github.com/NCalu/NCneticNpp/blob/main/NCneticCore/FAO.cs#L101
-    calculateArcPoints(startPoint, endPoint, centerPoint, clockwise) {
+    calculateArcPoints(startPoint, endPoint, center, clockwise) {
+
+        let centerPoint = {};
+        if (this.ijkRelative)
+            centerPoint = { x: center.x + startPoint.x, y: center.y + startPoint.y, z: center.z + startPoint.z };
+        else
+            centerPoint = center;
 
         const m = this.VectorHelpers;
         let points = [];
@@ -154,7 +163,9 @@ class GCodePathInterpreter {
             transformMatrix[2][1] = zt.y;
             transformMatrix[2][2] = zt.z;
         } else {
-            // return original move
+            // TODO: return original move
+            points.push(startPoint);
+            return points;
         }
 
         let v0t = m.MatrixVectorProduct(transformMatrix, v0);
@@ -184,8 +195,8 @@ class GCodePathInterpreter {
             }
         }
 
-        // TODO: hardcoded segment count
-        let da = 2 * Math.PI / 64;
+        // TODO: constant segment count
+        let da = 2 * Math.PI / this.MAX_ARC_POINTS;
         let nseg = parseInt(Math.ceil(Math.abs(a1 - a0) / da));
         let p0 = { x: startPoint.x, y: startPoint.y, z: startPoint.z };
         let invTransform = m.MatrixInverse(transformMatrix);
