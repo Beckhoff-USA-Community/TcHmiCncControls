@@ -8,8 +8,10 @@ class GCodePathInterpreter {
         this.relative = false;
         this.prevPoint = { x: 0, y: 0, z: 0, i: 0, j: 0, k: 0 };
         // TODO: fancy ijk relative calculation like NCnetic?
+        // pass in as 'machine config' parameter
         this.ijkRelative = false;
-        this.MAX_ARC_POINTS = 64;
+        // TODO: parameterize
+        this.MAX_ARC_POINTS = 32;
     }
 
     // creates a path from

@@ -1,8 +1,8 @@
-<div id="Desktop" data-tchmi-type="TcHmi.Controls.System.TcHmiView" data-tchmi-top="0" data-tchmi-left="0" data-tchmi-width-mode="Content" data-tchmi-min-width="100" data-tchmi-min-width-unit="%" data-tchmi-height-mode="Content" data-tchmi-min-height="100" data-tchmi-min-height-unit="%" data-tchmi-creator-viewport-width="1280" data-tchmi-creator-viewport-height="800">
+<div id="Desktop" data-tchmi-type="TcHmi.Controls.System.TcHmiView" data-tchmi-top="0" data-tchmi-left="0" data-tchmi-width-mode="Content" data-tchmi-min-width="100" data-tchmi-min-width-unit="%" data-tchmi-height-mode="Content" data-tchmi-min-height="100" data-tchmi-min-height-unit="%" data-tchmi-creator-viewport-width="1600" data-tchmi-creator-viewport-height="900">
   <div id="ViewDesktopBeckhoffLogo" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiImage" data-tchmi-src="Images/Beckhoff_Logo.svg" data-tchmi-left="20" data-tchmi-top="20" data-tchmi-width="194" data-tchmi-height="57">
 
   </div>
-<div id="GCodeEditor" data-tchmi-type="TcHmi.Controls.TcHmiCncControls.GCodeEditor" data-tchmi-height="486" data-tchmi-height-unit="px" data-tchmi-left="321" data-tchmi-left-unit="px" data-tchmi-top="115" data-tchmi-top-unit="px" data-tchmi-width="398" data-tchmi-width-unit="px" data-tchmi-font-size="18" data-tchmi-read-only="false">
+<div id="GCodeEditor" data-tchmi-type="TcHmi.Controls.TcHmiCncControls.GCodeEditor" data-tchmi-height="486" data-tchmi-height-unit="px" data-tchmi-left="321" data-tchmi-left-unit="px" data-tchmi-top="115" data-tchmi-top-unit="px" data-tchmi-width="398" data-tchmi-width-unit="px" data-tchmi-font-size="18" data-tchmi-read-only="true">
 
 <script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
 [
@@ -103,7 +103,7 @@
 </script>
 
 </div>
-<div id="GCodePathRenderer" data-tchmi-type="TcHmi.Controls.TcHmiCncControls.GCodePathRenderer" data-tchmi-height="486" data-tchmi-height-unit="px" data-tchmi-left="729" data-tchmi-left-unit="px" data-tchmi-top="115" data-tchmi-top-unit="px" data-tchmi-width="541" data-tchmi-width-unit="px" data-tchmi-render-progress="true" data-tchmi-selected-mesh="%ctrl%GCodeEditor::SelectedLine%/ctrl%">
+<div id="GCodePathRenderer" data-tchmi-type="TcHmi.Controls.TcHmiCncControls.GCodePathRenderer" data-tchmi-height="486" data-tchmi-height-unit="px" data-tchmi-left="729" data-tchmi-left-unit="px" data-tchmi-top="115" data-tchmi-top-unit="px" data-tchmi-width="665" data-tchmi-width-unit="px" data-tchmi-render-progress="true" data-tchmi-selected-mesh="%ctrl%GCodeEditor::SelectedLine%/ctrl%">
 
 
 

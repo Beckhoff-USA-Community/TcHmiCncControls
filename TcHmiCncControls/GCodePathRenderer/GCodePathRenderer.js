@@ -44,7 +44,7 @@ var TcHmi;
                     this.__renderProgress = false;
 
                     // max lines of gcode to render as selectable from model
-                    this.__MAX_LINES_SELECTABLE = 5000;
+                    this.__MAX_LINES_SELECTABLE = 1;
 
                     // constants
                     this.__VIEWS = [
@@ -137,12 +137,13 @@ var TcHmi;
                         // This targets the camera to scene origin
                         camera.setTarget(BABYLON.Vector3.Zero());
                         camera.wheelPrecision = 30;
+                        camera.minZ = 0;
 
                         // This creates a light, aiming 0,1,0 - to the sky (non-mesh)
                         var light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
                         light.intensity = 0.8;
 
-                        const axes = new BABYLON.Debug.AxesViewer(scene, 1)
+                        const axes = new BABYLON.Debug.AxesViewer(scene, 0.5)
 
                         // register render loop
                         engine.runRenderLoop(function () {
@@ -161,21 +162,46 @@ var TcHmi;
                         scene.skipPointerMovePicking = true;
 
                         // mesh onClick event
-                        scene.onPointerObservable.add((pointerInfo) => {
-                            if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERDOWN) {
-                                if (pointerInfo.pickInfo.hit) {
-                                    this.__onMeshPicked(pointerInfo.pickInfo.pickedMesh?.id);
-                                }
+                        //scene.onPointerObservable.add((pointerInfo) => {
+                        //    if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERDOWN) {
+                        //        if (pointerInfo.pickInfo.hit) {
+                        //            this.__onMeshPicked(pointerInfo.pickInfo.pickedPoint);
+                        //        }
+                        //    }
+                        //});
+
+                        scene.onPointerDown = (evt, pickResult) => {
+                            var meshFaceId = pickResult.faceId; // get the mesh picked face
+                            if (meshFaceId == -1) {
+                                return;
                             }
-                        });
+                            const picked = this.__lineData.sps.pickedParticle(pickResult);
+                            this.__onMeshPicked(picked?.idx);
+                        }
 
                         this.__scene = scene;
                     }
                 }
 
                 // mesh clicked handler
-                __onMeshPicked(id) {
-                    this.__selectedMeshId = parseInt(id);
+                __onMeshPicked(particleIdx) {
+
+                    // maybe mouse over visibility on particles?
+                    // find vertex closest to pickPoint
+                    //let index = 0;
+                    //let min = 10;
+                    //this.__lineData.lines.forEach((line, i) => {
+                    //    line.forEach((point, _) => {
+                    //        const m = Math.min(min, BABYLON.Vector3.Distance(point, pickedPoint));
+                    //        if (m < min) {
+                    //            index = i;
+                    //            min = m;
+                    //        }
+                    //    });
+                    //});
+
+                    const id = this.__lineData.ids[particleIdx];
+                    this.__selectedMeshId = id;
                     TcHmi.EventProvider.raise(`${this.getId()}.onPathSegmentPressed`);
                 }
 
@@ -199,18 +225,35 @@ var TcHmi;
                             line.freezeWorldMatrix();
                         });
                     } else {
+                        
+
+                        // particle material
+                        let mat = new BABYLON.StandardMaterial("m", this.__scene);
+                        mat.alpha = 0.15;
+
+                        // particle mesh
+                        let particle = new BABYLON.MeshBuilder.CreateBox("particle", { size: 0.04 }, this.__scene);
+
+                        // particle system
+                        const sps = new BABYLON.SolidParticleSystem("sps", this.__scene, { isPickable: true });
+                        sps.addShape(particle, paths.length);
+                        particle.dispose();
+                        let spsMesh = sps.buildMesh();
+                        spsMesh.material = mat;
+
                         // generate line and color arrays
                         let lines = [];
                         let colors = [];
                         let ids = [];
-                        paths.forEach(p => {
+                        paths.forEach((p, i) => {
                             const l = p.points.map(x => new BABYLON.Vector3(x.x, x.y, x.z));
-                            const c = p.points.map(x => {
-                                if (p.code === 'g0' || p.code === 'g00')
-                                    return new BABYLON.Color4(0, 0, 1, 1);
-                                else
-                                    return new BABYLON.Color4(0, 1, 0, 1);
-                            });
+                            const c = p.points.map(x =>
+                                (p.code === 'g0' || p.code === 'g00') ?
+                                    new BABYLON.Color4(0, 0, 1, 1) :
+                                    new BABYLON.Color4(0, 1, 0, 1)
+                            );
+
+                            sps.particles[i].position = l[l.length - 1];
 
                             lines.push(l);
                             colors.push(c);
@@ -227,13 +270,20 @@ var TcHmi;
                             },
                             this.__scene
                         );
+
                         ls.isPickable = false;
+                        ls.isAlwaysVisible = true;
+
+                        sps.isAlwaysVisible = true;
+                        sps.setParticles();
+                        sps.refreshVisibleSize();
 
                         // store line data in control state
                         this.__lineData.lineSystem = ls;
                         this.__lineData.lines = lines;
                         this.__lineData.colors = colors;
                         this.__lineData.ids = ids;
+                        this.__lineData.sps = sps;
                     }
                 }
 
