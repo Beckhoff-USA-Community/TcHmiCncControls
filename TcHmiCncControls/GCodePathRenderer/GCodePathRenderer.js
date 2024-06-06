@@ -42,17 +42,6 @@ var TcHmi;
                     this.__pathString = "";
                     this.__selectedMeshId = 0;
                     this.__renderProgress = false;
-
-                    // max lines of gcode to render as selectable from model
-                    this.__MAX_LINES_SELECTABLE = 1;
-
-                    // constants
-                    this.__VIEWS = [
-                        { name: "camera0", alpha: 1.2, beta: 1.2, radius: 7, target: new BABYLON.Vector3(0, 0, 0) },
-                        { name: "camera1", alpha: 2, beta: 1.2, radius: 7, target: new BABYLON.Vector3(0, 0, 0) },
-                        { name: "camera2", alpha: -1.2, beta: 1.2, radius: 7, target: new BABYLON.Vector3(0, 0, 0) },
-                        { name: "camera3", alpha: -2, beta: 1.2, radius: 7, target: new BABYLON.Vector3(0, 0, 0) }
-                    ];
                 }
 
                 /**
@@ -107,100 +96,84 @@ var TcHmi;
                      */
                 }
 
+                __handleResize() {
+                    // resize scene if parent element size changes
+                    this.__engine?.resize();
+                }
+
                 // init / re-init babylon scene
                 __initScene() {
                     if (this.__engine) {
 
                         if (this.__scene) {
                             this.__scene.dispose();
+                            window.removeEventListener("resize", this.__handleResize);
                         }
 
                         // generate scene
                         const engine = this.__engine;
+                        const scene = new BABYLON.Scene(engine);
 
-                        // create scene
-                        const scene = new BABYLON.Scene(engine, { useClonedMeshMap: true, useMaterialMeshMap: true, useGeometryUniqueIdsMap: true });
-
-                        // init camera from view array
+                        // init camera
                         const camera = new BABYLON.ArcRotateCamera(
-                            this.__VIEWS[0].name,
-                            this.__VIEWS[0].alpha,
-                            this.__VIEWS[0].beta,
-                            this.__VIEWS[0].radius,
-                            this.__VIEWS[0].target,
-                            scene
-                        );
-
-                        // attach mouse controls to camera
+                            "camera0", Math.PI / 2, Math.PI / 2, 7, BABYLON.Vector3.Zero(), scene);
                         camera.attachControl();
 
-                        // This targets the camera to scene origin
-                        camera.setTarget(BABYLON.Vector3.Zero());
-                        camera.wheelPrecision = 30;
-                        camera.minZ = 0;
+                        const _ = new BABYLON.Debug.AxesViewer(scene, 0.5)
 
-                        // This creates a light, aiming 0,1,0 - to the sky (non-mesh)
-                        var light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
-                        light.intensity = 0.8;
-
-                        const axes = new BABYLON.Debug.AxesViewer(scene, 0.5)
+                        // resize engine on window resize
+                        window.addEventListener("resize", this.__handleResize);
 
                         // register render loop
                         engine.runRenderLoop(function () {
                             scene.render();
                         });
 
-                        // resize engine on window resize
-                        window.addEventListener("resize", function () {
-                            engine.resize();
-                        });
-
                         // give time for init, then resize
-                        setTimeout(() => { engine.resize(); }, 500);
+                        setTimeout(() => { engine.resize(); }, 1000);
 
                         // optimization
                         scene.skipPointerMovePicking = true;
 
                         // mesh onClick event
-                        //scene.onPointerObservable.add((pointerInfo) => {
-                        //    if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERDOWN) {
-                        //        if (pointerInfo.pickInfo.hit) {
-                        //            this.__onMeshPicked(pointerInfo.pickInfo.pickedPoint);
-                        //        }
-                        //    }
-                        //});
-
-                        scene.onPointerDown = (evt, pickResult) => {
-                            var meshFaceId = pickResult.faceId; // get the mesh picked face
-                            if (meshFaceId == -1) {
-                                return;
+                        scene.onPointerObservable.add((pointerInfo) => {
+                            if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERDOWN) {
+                                // ignore right-click
+                                if (pointerInfo.event.inputIndex === 4) return;
+                                if (pointerInfo.pickInfo.hit) {
+                                    this.__onMeshPicked(pointerInfo.pickInfo);
+                                }
                             }
-                            const picked = this.__lineData.sps.pickedParticle(pickResult);
-                            this.__onMeshPicked(picked?.idx);
-                        }
 
+                        });
+
+                        // update scene reference
                         this.__scene = scene;
                     }
                 }
 
+                __initCamera(focusMesh) {
+
+                    if (!this.__scene) return;
+
+                    // get active camera
+                    const camera = this.__scene.activeCamera;
+
+                    // zoom to model
+                    camera.useFramingBehavior = true;
+                    camera.framingBehavior.radiusScale = 0.70;
+                    camera.setTarget(focusMesh);
+
+                    // scroll zoom config
+                    camera.minZ = 0;
+                    camera.wheelPrecision = 40;
+                    camera.lowerRadiusLimit = null;
+                    camera.useFramingBehavior = false;
+                }
+
                 // mesh clicked handler
-                __onMeshPicked(particleIdx) {
-
-                    // maybe mouse over visibility on particles?
-                    // find vertex closest to pickPoint
-                    //let index = 0;
-                    //let min = 10;
-                    //this.__lineData.lines.forEach((line, i) => {
-                    //    line.forEach((point, _) => {
-                    //        const m = Math.min(min, BABYLON.Vector3.Distance(point, pickedPoint));
-                    //        if (m < min) {
-                    //            index = i;
-                    //            min = m;
-                    //        }
-                    //    });
-                    //});
-
-                    const id = this.__lineData.ids[particleIdx];
+                __onMeshPicked(pickInfo) {
+                    const id = this.__lineData.faceIdMap.get(pickInfo.subMeshFaceId);
                     this.__selectedMeshId = id;
                     TcHmi.EventProvider.raise(`${this.getId()}.onPathSegmentPressed`);
                 }
@@ -212,79 +185,48 @@ var TcHmi;
                     const interpreter = new GCodePathInterpreter();
                     const paths = interpreter.Trace(gcode);
 
-                    // gcode line count
-                    this.__lineData.count = paths.length;
-
-                    // render selectable
-                    if (paths.length < this.__MAX_LINES_SELECTABLE) {
-                        paths.forEach(p => {
-                            let line = BABYLON.MeshBuilder.CreateLines(p.id, { points: p.points });
-                            line.color = (p.code === 'g0' || p.code === 'g00') ?
-                                line.color = new BABYLON.Color4(0, 0, 1, 1) :
-                                line.color = new BABYLON.Color4(0, 1, 0, 1);
-                            line.freezeWorldMatrix();
+                    // generate line and color arrays
+                    const lines = [];
+                    const colors = [];
+                    const ids = [];
+                    const faceIdMap = new Map();
+                    let faceId = 0;
+                    paths.forEach((p, i) => {
+                        const l = p.points.map((x, j) => {
+                            if (j > 0) faceIdMap.set(faceId++, p.id);
+                            return new BABYLON.Vector3(x.x, x.y, x.z)
                         });
-                    } else {
-                        
-
-                        // particle material
-                        let mat = new BABYLON.StandardMaterial("m", this.__scene);
-                        mat.alpha = 0.15;
-
-                        // particle mesh
-                        let particle = new BABYLON.MeshBuilder.CreateBox("particle", { size: 0.04 }, this.__scene);
-
-                        // particle system
-                        const sps = new BABYLON.SolidParticleSystem("sps", this.__scene, { isPickable: true });
-                        sps.addShape(particle, paths.length);
-                        particle.dispose();
-                        let spsMesh = sps.buildMesh();
-                        spsMesh.material = mat;
-
-                        // generate line and color arrays
-                        let lines = [];
-                        let colors = [];
-                        let ids = [];
-                        paths.forEach((p, i) => {
-                            const l = p.points.map(x => new BABYLON.Vector3(x.x, x.y, x.z));
-                            const c = p.points.map(x =>
-                                (p.code === 'g0' || p.code === 'g00') ?
-                                    new BABYLON.Color4(0, 0, 1, 1) :
-                                    new BABYLON.Color4(0, 1, 0, 1)
-                            );
-
-                            sps.particles[i].position = l[l.length - 1];
-
-                            lines.push(l);
-                            colors.push(c);
-                            ids.push(p.id);
-                        });
-
-                        // create line system
-                        let ls = BABYLON.MeshBuilder.CreateLineSystem(
-                            "lineSystem",
-                            {
-                                lines: lines,
-                                colors: colors,
-                                updatable: true
-                            },
-                            this.__scene
+                        const c = p.points.map(x =>
+                            (p.code === 'g0' || p.code === 'g00') ?
+                                new BABYLON.Color4(0, 0, 1, 1) :
+                                new BABYLON.Color4(0, 1, 0, 1)
                         );
 
-                        ls.isPickable = false;
-                        ls.isAlwaysVisible = true;
+                        lines.push(l);
+                        colors.push(c);
+                        ids.push(p.id);
+                    });
 
-                        sps.isAlwaysVisible = true;
-                        sps.setParticles();
-                        sps.refreshVisibleSize();
+                    // create line system
+                    const ls = BABYLON.MeshBuilder.CreateLineSystem(
+                        "lineSystem",
+                        {
+                            lines: lines,
+                            colors: colors,
+                            updatable: true
+                        },
+                        this.__scene
+                    );
 
-                        // store line data in control state
-                        this.__lineData.lineSystem = ls;
-                        this.__lineData.lines = lines;
-                        this.__lineData.colors = colors;
-                        this.__lineData.ids = ids;
-                        this.__lineData.sps = sps;
-                    }
+                    // store line data in control state
+                    this.__lineData.lineSystem = ls;
+                    this.__lineData.lines = lines;
+                    this.__lineData.colors = colors;
+                    this.__lineData.ids = ids;
+                    this.__lineData.faceIdMap = faceIdMap;
+
+                    // set view
+                    this.__initCamera(ls);
                 }
 
                 // set mesh colors based on id
@@ -293,39 +235,30 @@ var TcHmi;
                     const ld = this.__lineData;
                     const blue = new BABYLON.Color4(0, 0, 1, 1);
 
-                    if (ld.count > this.__MAX_LINES_SELECTABLE) {
-                        for (let i = 0; i < ld.colors.length; i++) {
-                            if (ld.colors[i][0].equals(blue)) continue;
-                            if (ld.ids[i] <= id) {
-                                ld.colors[i].forEach((_, j) =>
-                                    ld.colors[i][j] = new BABYLON.Color4(1, 0, 0, 1));
-                            } else {
-                                ld.colors[i].forEach((_, j) =>
-                                    ld.colors[i][j] = new BABYLON.Color4(0, 1, 0, 1));
-                            }
-                        }
+                    if (!ld.colors) return;
 
-                        // update colors
-                        ld.lineSystem = BABYLON.MeshBuilder.CreateLineSystem(
-                            "lineSystem",
-                            {
-                                lines: ld.lines,
-                                colors: ld.colors,
-                                instance: ld.lineSystem,
-                                updatable: true
-                            }
-                        );
-                    } else {
-                        // update scene meshes
-                        this.__scene.meshes.forEach(m => {
-                            if (m.color && m.color.equals(blue)) return;
-                            if (m.id <= id) {
-                                m.color = new BABYLON.Color4(1, 0, 0, 1);
-                            } else {
-                                m.color = new BABYLON.Color4(0, 1, 0, 1);
-                            }
-                        });
+                    // set colors
+                    for (let i = 0; i < ld.colors.length; i++) {
+                        if (ld.colors[i][0].equals(blue)) continue;
+                        if (ld.ids[i] <= id) {
+                            ld.colors[i].forEach((_, j) =>
+                                ld.colors[i][j] = new BABYLON.Color4(1, 0, 0, 1));
+                        } else {
+                            ld.colors[i].forEach((_, j) =>
+                                ld.colors[i][j] = new BABYLON.Color4(0, 1, 0, 1));
+                        }
                     }
+
+                    // update colors
+                    ld.lineSystem = BABYLON.MeshBuilder.CreateLineSystem(
+                        "lineSystem",
+                        {
+                            lines: ld.lines,
+                            colors: ld.colors,
+                            instance: ld.lineSystem,
+                            updatable: true
+                        }
+                    );
                 }
 
                 /**
