@@ -285,7 +285,9 @@ var TcHmi;
 
                     let mesh = this.__scene.getMeshByName("tool");
                     if (!mesh) mesh = BABYLON.MeshBuilder.CreateCylinder("tool", { diameter: 0.1, height: 0.5 });
-                    
+
+                    console.log(this.__toolingConfig);
+
                     mesh.position.x = this.__toolingConfig.positionOffset.x + pos.x;
                     mesh.position.y = this.__toolingConfig.positionOffset.y + pos.y;
                     mesh.position.z = this.__toolingConfig.positionOffset.z + pos.z;
@@ -376,7 +378,7 @@ var TcHmi;
                     this.__toolingPos.b = value.b || value.B || 0;
                     this.__toolingPos.c = value.c || value.C || 0;
 
-                    if (this.__cncConfig.ShowTooling) {
+                    if (this.__toolingConfig.showTooling) {
                         this.__updateTooling(this.__toolingPos);
                     }
                 }

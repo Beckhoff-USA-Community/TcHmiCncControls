@@ -113,9 +113,8 @@
 
 <script data-tchmi-target-attribute="data-tchmi-cnc-config" type="application/json">
 {
-  "IjkRelative": false,
-  "MaxArcRenderPoints": 32,
-  "ShowTooling": true
+  "ijkRelative": false,
+  "maxArcRenderPoints": 32
 }
 </script>
 
@@ -141,6 +140,17 @@
     "b": 0.0,
     "c": 0.0
   }
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-tooling-position" type="application/json">
+{
+  "x": 0.0,
+  "y": 0.0,
+  "z": 0.0,
+  "a": 0.0,
+  "b": 0.0,
+  "c": 0.0
 }
 </script>
 </div>

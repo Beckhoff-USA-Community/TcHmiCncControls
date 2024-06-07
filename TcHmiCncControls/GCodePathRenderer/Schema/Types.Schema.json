@@ -11,15 +11,30 @@
       "type": "object",
       "properties": {
         "ijkRelative": {
-          "type": "boolean",
-          "default": true,
-          "description": "IJK arc center point parameters are relative (true) or absolute (false) to XYZ."
+          "type": "boolean"
         },
         "maxArcRenderPoints": {
-          "type": "integer",
-          "description": "Max number of points used for arc interpolation (rendering only)."
+          "type": "integer"
         }
-      }
+      },
+      "propertiesMeta": [
+        {
+          "name": "ijkRelative",
+          "displayName": "IJK Relative",
+          "displayPriority": 1,
+          "description": "IJK arc center point parameters are relative (true) or absolute (false) to XYZ.",
+          "defaultValue": true,
+          "defaultValueInternal": true
+        },
+        {
+          "name": "maxArcRenderPoints",
+          "displayName": "Max Arc Render Points",
+          "displayPriority": 2,
+          "description": "Max number of points used for arc interpolation (rendering only).",
+          "defaultValue": 32,
+          "defaultValueInternal": 32
+        }
+      ]
     },
     "ToolPosition": {
       "type": "object",
