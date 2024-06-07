@@ -110,13 +110,7 @@
     <Content Include="GCodePathRenderer\Icons\16x16.png">
       <SubType>Content</SubType>
     </Content>
-    <Content Include="GCodePathRenderer\lib\babylonjs\babylon.gui.min.js">
-      <SubType>Content</SubType>
-    </Content>
     <Content Include="GCodePathRenderer\lib\babylonjs\babylon.js">
-      <SubType>Content</SubType>
-    </Content>
-    <Content Include="GCodePathRenderer\lib\babylonjs\babylon.viewer.js">
       <SubType>Content</SubType>
     </Content>
     <Content Include="GCodePathRenderer\lib\babylonjs\license.md.txt">

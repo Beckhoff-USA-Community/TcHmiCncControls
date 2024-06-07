@@ -34,8 +34,31 @@ test("GCodeParser.tokenize() generates correct token array (no spaces)", () => {
         .toEqual(['G1', 'G193', 'X1.308309', 'Y1.62311', 'Z0', 'F6.54']);
 });
 
+const  gcodemodal = `
+G0 X-3.184 Z2.0 A0.0
+G1 X-3.184 Z-2.0 A0.0 F225
+G21
+X-3.184 Z-0.978 A0.0
+X-2.184 Z-0.978 A0.0
+X-2.184 Z-1.702 A0.0
+`;
+
+const expectedmodal = [
+    { code: 'G0', line: 2, args: { X: -3.184, Z: 2.0, A: 0.0 } },
+    { code: 'G1', line: 3, args: { X: -3.184, Z: -2.0, A: 0.0, F: 225 } },
+    { code: 'G1', line: 5, args: { X: -3.184, Z: -0.978, A: 0.0 } },
+    { code: 'G1', line: 6, args: { X: -2.184, Z: -0.978, A: 0.0 } },
+    { code: 'G1', line: 7, args: { X: -2.184, Z: -1.702, A: 0.0 } }
+];
+
+test("GCodeParser.parse() parses modal codes properly", () => {
+    const res = parser.Parse(gcodemodal);
+    console.log(res);
+    expect(parser.Parse(gcodemodal)).toEqual(expectedmodal);
+});
+
 // full parse test
-const gcode = `
+gcodefull = `
 N100 G70
 N101 G90 G17 G161
 N102 (M50) (ALL JET ON)
@@ -44,7 +67,7 @@ N104 G1 X1.3225 Y1.6231 Z0 F4.97 G91 G28 X0 Y0 ; multi-code line
 N105 G2 G193 X1.336982 Y2.749007 I1.254028 J2.541072 A-12.361 C101.388 Z0 F6.12
 `;
 
-const expected = [
+const expectedfull = [
     { code: 'G70', line: 2, args: {} },
     { code: 'G90', line: 3, args: {} },
     { code: 'G17', line: 3, args: { G: 161 } },
@@ -56,5 +79,5 @@ const expected = [
 ];
 
 test("GCodeParser.parse() returns the correct object array", () => {
-    expect(parser.Parse(gcode)).toEqual(expected);
+    expect(parser.Parse(gcodefull)).toEqual(expectedfull);
 });

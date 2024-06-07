@@ -42,6 +42,19 @@ var TcHmi;
                     this.__pathString = "";
                     this.__selectedMeshId = 0;
                     this.__renderProgress = false;
+                    this.__cncConfig = {
+                        ijkRelative: true, maxArcRenderingPoints: 32
+                    };
+                    this.__toolingConfig = {
+                        showTooling: true,
+                        positionOffset: {
+                            x: 0, y: 0, z: 0, a: 0, b: 0, c: 0
+                        },
+                        rotationUnit: "Degrees"
+                    };
+                    this.__toolingPos = {
+                        x: 0, y: 0, z: 0, a: 0, b: 0, c: 0
+                    };
                 }
 
                 /**
@@ -120,6 +133,7 @@ var TcHmi;
                         camera.attachControl();
 
                         const _ = new BABYLON.Debug.AxesViewer(scene, 0.5)
+                        const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(1, 1, 0), scene);
 
                         // resize engine on window resize
                         window.addEventListener("resize", this.__handleResize);
@@ -176,13 +190,16 @@ var TcHmi;
                     const id = this.__lineData.faceIdMap.get(pickInfo.subMeshFaceId);
                     this.__selectedMeshId = id;
                     TcHmi.EventProvider.raise(`${this.getId()}.onPathSegmentPressed`);
+                    TcHmi.EventProvider.raise(`${this.getId()}.onPropertyChanged`, {
+                        propertyName: "SelectedMeshId",
+                    });
                 }
 
                 __parseGCode(gcode) {
                     
                     // trace path
                     this.__initScene();
-                    const interpreter = new GCodePathInterpreter();
+                    const interpreter = new GCodePathInterpreter(this.__cncConfig);
                     const paths = interpreter.Trace(gcode);
 
                     // generate line and color arrays
@@ -261,6 +278,30 @@ var TcHmi;
                     );
                 }
 
+                // update tooling
+                __updateTooling(pos) {
+                    if (!this.__scene)
+                        return;
+
+                    let mesh = this.__scene.getMeshByName("tool");
+                    if (!mesh) mesh = BABYLON.MeshBuilder.CreateCylinder("tool", { diameter: 0.1, height: 0.5 });
+                    
+                    mesh.position.x = this.__toolingConfig.positionOffset.x + pos.x;
+                    mesh.position.y = this.__toolingConfig.positionOffset.y + pos.y;
+                    mesh.position.z = this.__toolingConfig.positionOffset.z + pos.z;
+
+                    // abc rotation
+                    if (this.__toolingConfig.rotationUnit === "Degrees") {
+                        mesh.rotation.x = (this.__toolingConfig.positionOffset.a + pos.a) * Math.PI / 180;
+                        mesh.rotation.y = (this.__toolingConfig.positionOffset.b + pos.b) * Math.PI / 180;
+                        mesh.rotation.z = (this.__toolingConfig.positionOffset.c + pos.c) * Math.PI / 180;
+                    } else {
+                        mesh.rotation.x = this.__toolingConfig.positionOffset.a + pos.a;
+                        mesh.rotation.y = this.__toolingConfig.positionOffset.b + pos.b;
+                        mesh.rotation.z = this.__toolingConfig.positionOffset.c + pos.c;
+                    }
+                }
+
                 /**
                  * Destroy the current control instance.
                  * Will be called automatically if the framework destroys the control instance!
@@ -273,9 +314,9 @@ var TcHmi;
                         return;
                     }
                     super.destroy();
-                    /**
-                     * Free resources like child controls etc.
-                     */
+
+                    this.__scene?.dispose();
+                    this.__engine?.dispose();
                 }
 
                 setPath(value) {
@@ -301,6 +342,43 @@ var TcHmi;
 
                 setRenderProgress(value) {
                     this.__renderProgress = value;
+                }
+
+                getCncConfig() {
+                    return this.__cncConfig;
+                }
+
+                setCncConfig(value) {
+                    this.__cncConfig = value;
+                }
+
+                getToolingConfig() {
+                    return this.__toolingConfig;
+                }
+
+                setToolingConfig(value) {
+                    this.__toolingConfig.showTooling = value?.showTooling;
+                    this.__toolingConfig.positionOffset = value?.positionOffset;
+                    this.__toolingConfig.rotationUnit = value?.rotationUnit;
+                }
+
+                getToolingPosition() {
+                    return this.__toolingPos;
+                }
+
+                setToolingPosition(value) {
+
+                    // normalize input
+                    this.__toolingPos.x = value.x || value.X || 0;
+                    this.__toolingPos.y = value.y || value.Y || 0;
+                    this.__toolingPos.z = value.z || value.Z || 0;
+                    this.__toolingPos.a = value.a || value.A || 0;
+                    this.__toolingPos.b = value.b || value.B || 0;
+                    this.__toolingPos.c = value.c || value.C || 0;
+
+                    if (this.__cncConfig.ShowTooling) {
+                        this.__updateTooling(this.__toolingPos);
+                    }
                 }
             }
             TcHmiCncControls.GCodePathRenderer = GCodePathRenderer;

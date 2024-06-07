@@ -112,12 +112,13 @@
       "name": "data-tchmi-selected-line",
       "category": "Common",
       "propertyGetterName": "getSelectedLine",
+      "propertySetterName": "setSelectedLine",
       "propertyName": "SelectedLine",
       "type": "tchmi:general#/definitions/Number",
       "defaultValue": 0,
       "defaultValueInternal": 0,
       "bindable": true,
-      "readOnly": true,
+      "readOnly": false,
       "visible": true,
       "description": "Selected line in editor"
     }

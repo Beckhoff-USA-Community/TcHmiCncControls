@@ -11,6 +11,7 @@ class GCodeParser {
             'G1', 'G01',
             'G2', 'G02',
             'G3', 'G03',
+            'G4', 'G04',
             'G17',
             'G28',
             'G70',
@@ -18,20 +19,45 @@ class GCodeParser {
             'G90',
             'G91'
         ];
+
+        this.modalGcodes = [
+            'G0', 'G00',
+            'G1', 'G01',
+            'G2', 'G02',
+            'G3', 'G03'
+        ];
+
+        this.modalParams = [
+            'X', 'Y', 'Z'
+        ];
     }
 
     // parses gcode string and returns object array
     Parse(gcode) {
 
-        let parsed = [];
+        const parsed = [];
         const lines = gcode.split("\n");
+        let prevCode = "";
         lines.forEach((line, i) => {
             // clean and tokenize line
             const tokens = this.tokenize(this.clean(line));
             if (tokens && tokens.length) {
-                // check line for multiple codes
-                const codes = this.splitList(tokens);
-                parsed.push(...codes.map(x => new GCodeParseStruct(x, i)));
+                // check for codes
+                if (tokens.some(x => this.gCodes.includes(x.toUpperCase()))) {
+                    // check line for multiple codes
+                    const codes = this.splitList(tokens);
+                    const structs = codes.map(x => new GCodeParseStruct(x, i));
+                    parsed.push(...structs);
+                    // get previous valid gcode for if subsequent lines are modal
+                    prevCode = structs.filter(x => this.modalGcodes.includes(x.code.toUpperCase()))
+                        .pop()?.code ?? prevCode;
+                } else {
+                    // line contains no G code, but modal params
+                    if (tokens.some(x => this.modalParams.some(y => x.toUpperCase().includes(y)))) {
+                        parsed.push(new GCodeParseStruct([prevCode, ...tokens], i));
+                    }
+                }
+                
             }
         });
 
@@ -51,13 +77,13 @@ class GCodeParser {
     // split line with mutliple codes into separate code/argument lists
     // (line may contain multiple GCodes w/ args)
     splitList(tokenList) {
-        let codes = [];
+        const codes = [];
         for (let i = 0; i < tokenList.length; i++) {
             // new instruction
             if (this.gCodes.includes(tokenList[i].toUpperCase())) {
                 // get params
                 let j = i + 1;
-                let args = [];
+                const args = [];
                 while (tokenList[j] && !this.gCodes.includes(tokenList[j].toUpperCase())) {
                     args.push(tokenList[j]);
                     j++;
@@ -80,7 +106,7 @@ class GCodeParseStruct {
             // set args
             this.args = tokens.slice(1).reduce((obj, arg) => {
                 // get arg name - TODO (maybe): only supports single char arg names
-                const name = arg[0];
+                const name = arg[0].toUpperCase();
                 // get arg value
                 let value = parseFloat(arg.substring(1));
                 obj[name] = value;

@@ -6,6 +6,145 @@
       "frameworkInstanceOf": "TcHmi.Controls.System.TcHmiControl",
       "frameworkControlType": "GCodePathRenderer",
       "frameworkControlNamespace": "TcHmi.Controls.TcHmiCncControls"
+    },
+    "CncConfig": {
+      "type": "object",
+      "properties": {
+        "ijkRelative": {
+          "type": "boolean",
+          "default": true,
+          "description": "IJK arc center point parameters are relative (true) or absolute (false) to XYZ."
+        },
+        "maxArcRenderPoints": {
+          "type": "integer",
+          "description": "Max number of points used for arc interpolation (rendering only)."
+        }
+      }
+    },
+    "ToolPosition": {
+      "type": "object",
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "z": {
+          "type": "number"
+        },
+        "a": {
+          "type": "number"
+        },
+        "b": {
+          "type": "number"
+        },
+        "c": {
+          "type": "number"
+        }
+      },
+      "propertiesMeta": [
+        {
+          "name": "x",
+          "displayName": "X",
+          "displayPriority": 1,
+          "description": "X Position",
+          "defaultValue": 0,
+          "defaultValueInternal": 0
+        },
+        {
+          "name": "y",
+          "displayName": "Y",
+          "displayPriority": 2,
+          "description": "Y Position",
+          "defaultValue": 0,
+          "defaultValueInternal": 0
+        },
+        {
+          "name": "z",
+          "displayName": "Z",
+          "displayPriority": 3,
+          "description": "Z Position",
+          "defaultValue": 0,
+          "defaultValueInternal": 0
+        },
+        {
+          "name": "a",
+          "displayName": "A",
+          "displayPriority": 4,
+          "description": "X Rotation",
+          "defaultValue": 0,
+          "defaultValueInternal": 0
+        },
+        {
+          "name": "b",
+          "displayName": "B",
+          "displayPriority": 5,
+          "description": "Y Rotation",
+          "defaultValue": 0,
+          "defaultValueInternal": 0
+        },
+        {
+          "name": "c",
+          "displayName": "C",
+          "displayPriority": 6,
+          "description": "Z Rotation",
+          "defaultValue": 0,
+          "defaultValueInternal": 0
+        }
+      ]
+    },
+    "ToolingConfig": {
+      "type": "object",
+      "properties": {
+        "showTooling": {
+          "type": "boolean"
+        },
+        "rotationUnit": {
+          "type": "string",
+          "enum": [ "Degrees", "Radian" ]
+        },
+        "positionOffset": {
+          "$ref": "tchmi:framework#/definitions/ToolPosition"
+        }
+      },
+      "propertiesMeta": [
+        {
+          "name": "showTooling",
+          "displayName": "Show Tooling",
+          "displayPriority": 1,
+          "defaultValue": true,
+          "defaultValueInternal": true
+        },
+        {
+          "name": "rotationUnit",
+          "displayName": "Rotation Units",
+          "displayPriority": 2,
+          "defaultValue": "Degrees",
+          "defaultValueInternal": "Degrees"
+        },
+        {
+          "name": "positionOffset",
+          "displayName": "Position Offset",
+          "displayPriority": 3,
+          "defaultValue": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "a": 0,
+            "b": 0,
+            "c": 0
+          },
+          "defaultValueInternal": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "a": 0,
+            "b": 0,
+            "c": 0
+          }
+        }
+      ]
     }
   }
 }

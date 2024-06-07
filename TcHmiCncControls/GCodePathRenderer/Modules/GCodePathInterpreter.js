@@ -3,15 +3,12 @@
 
 class GCodePathInterpreter {
 
-    constructor(scene) {
+    constructor(config) {
         this.multiplier = 1.0;
         this.relative = false;
         this.prevPoint = { x: 0, y: 0, z: 0, i: 0, j: 0, k: 0 };
-        // TODO: fancy ijk relative calculation like NCnetic?
-        // pass in as 'machine config' parameter
-        this.ijkRelative = false;
-        // TODO: parameterize
-        this.MAX_ARC_POINTS = 32;
+        this.ijkRelative = config.ijkRelative;
+        this.MAX_ARC_POINTS = config.maxArcRenderingPoints || 32;
     }
 
     // creates a path from
@@ -22,7 +19,7 @@ class GCodePathInterpreter {
         const parser = new GCodeParser();
         const parsed = parser.Parse(gcode);
 
-        // reduce into { id: #, points: [] } object array
+        // reduce into { code: **, id: #, points: [] } object array
         const parent = this;
         const points = parsed.reduce((arr, g) => {
             const code = g.code.toLowerCase();
@@ -165,7 +162,7 @@ class GCodePathInterpreter {
             transformMatrix[2][1] = zt.y;
             transformMatrix[2][2] = zt.z;
         } else {
-            // TODO: return original move
+            
             points.push(startPoint);
             return points;
         }
@@ -197,7 +194,6 @@ class GCodePathInterpreter {
             }
         }
 
-        // TODO: constant segment count
         let da = 2 * Math.PI / this.MAX_ARC_POINTS;
         let nseg = parseInt(Math.ceil(Math.abs(a1 - a0) / da));
         let p0 = { x: startPoint.x, y: startPoint.y, z: startPoint.z };
@@ -217,6 +213,83 @@ class GCodePathInterpreter {
                 points.push(coords);
             }
         }
+
+        return points;
+    }
+
+    // TODO: implement and test
+    calculateArcPointsR(startPoint, endPoint, R, isClockwise) {
+
+        // Midpoint of the chord in 3D
+        const Xmid = (startPoint.x + endPoint.x) / 2;
+        const Ymid = (startPoint.y + endPoint.y) / 2;
+        const Zmid = (startPoint.z + endPoint.z) / 2;
+
+        // Distance from midpoint to center
+        const halfChordLength = Math.sqrt((endPoint.x - startPoint.x) ** 2 + (endPoint.y - startPoint.y) ** 2 + (endPoint.z - startPoint.z) ** 2) / 2;
+        const distanceToCenter = Math.sqrt(R ** 2 - halfChordLength ** 2);
+
+        // Vector along the chord
+        const dx = endPoint.x - startPoint.x;
+        const dy = endPoint.y - startPoint.y;
+        const dz = endPoint.z - startPoint.z;
+
+        // Normalize the chord vector
+        const chordLength = Math.sqrt(dx ** 2 + dy ** 2 + dz ** 2);
+        const nx = dx / chordLength;
+        const ny = dy / chordLength;
+        const nz = dz / chordLength;
+
+        // Calculate a vector perpendicular to the chord
+        const perpendicularVector = (nx, ny, nz) => {
+            if (nx !== 0 || ny !== 0) {
+                return { px: -ny, py: nx, pz: 0 };
+            } else {
+                return { px: 0, py: -nz, pz: ny };
+            }
+        };
+
+        const { px, py, pz } = perpendicularVector(nx, ny, nz);
+
+        // Calculate the center of the arc
+        let Xc, Yc, Zc;
+        if (isClockwise) {
+            Xc = Xmid - distanceToCenter * px;
+            Yc = Ymid - distanceToCenter * py;
+            Zc = Zmid - distanceToCenter * pz;
+        } else {
+            Xc = Xmid + distanceToCenter * px;
+            Yc = Ymid + distanceToCenter * py;
+            Zc = Zmid + distanceToCenter * pz;
+        }
+
+        // Calculate start and end angles
+        let theta0 = Math.atan2(startPoint.y - Yc, startPoint.x - Xc);
+        let theta1 = Math.atan2(endPoint.y - Yc, endPoint.x - Xc);
+
+        // Calculate the sweep angle
+        let deltaTheta = theta1 - theta0;
+
+        // Normalize deltaTheta for proper direction
+        if (isClockwise) {
+            if (deltaTheta >= 0) deltaTheta -= 2 * Math.PI;
+        } else {
+            if (deltaTheta <= 0) deltaTheta += 2 * Math.PI;
+        }
+
+        const points = [];
+        const totalSteps = Math.abs(deltaTheta / this.MAX_ARC_POINTS);
+
+        for (let step = 0; step <= totalSteps; step++) {
+            const theta = theta0 + step * this.MAX_ARC_POINTS * (isClockwise ? -1 : 1);
+            const X = Xc + R * Math.cos(theta);
+            const Y = Yc + R * Math.sin(theta);
+            const Z = Zc + R * Math.sin(theta);
+            points.push({ X, Y, Z });
+        }
+
+        // Add the end point to ensure accuracy
+        points.push({ X: endPoint.x, Y: endPoint.y, Z: endPoint.z });
 
         return points;
     }

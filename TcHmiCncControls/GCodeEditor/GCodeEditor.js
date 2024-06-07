@@ -232,6 +232,11 @@ var TcHmi;
                 getSelectedLine() {
                     return this.__selectedLine + 1;
                 }
+
+                setSelectedLine(value) {
+                    this.__selectedLine = value;
+                    this.gotoLine(this.__selectedLine);
+                }
             }
             TcHmiCncControls.GCodeEditor = GCodeEditor;
         })(TcHmiCncControls = Controls.TcHmiCncControls || (Controls.TcHmiCncControls = {}));

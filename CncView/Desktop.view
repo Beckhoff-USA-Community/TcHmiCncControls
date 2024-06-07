@@ -2,7 +2,7 @@
   <div id="ViewDesktopBeckhoffLogo" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiImage" data-tchmi-src="Images/Beckhoff_Logo.svg" data-tchmi-left="20" data-tchmi-top="20" data-tchmi-width="194" data-tchmi-height="57">
 
   </div>
-<div id="GCodeEditor" data-tchmi-type="TcHmi.Controls.TcHmiCncControls.GCodeEditor" data-tchmi-height="486" data-tchmi-height-unit="px" data-tchmi-left="321" data-tchmi-left-unit="px" data-tchmi-top="115" data-tchmi-top-unit="px" data-tchmi-width="398" data-tchmi-width-unit="px" data-tchmi-font-size="18" data-tchmi-read-only="true">
+<div id="GCodeEditor" data-tchmi-type="TcHmi.Controls.TcHmiCncControls.GCodeEditor" data-tchmi-height="486" data-tchmi-height-unit="px" data-tchmi-left="321" data-tchmi-left-unit="px" data-tchmi-top="115" data-tchmi-top-unit="px" data-tchmi-width="398" data-tchmi-width-unit="px" data-tchmi-font-size="18" data-tchmi-read-only="false" data-tchmi-selected-line="%ctrl%GCodePathRenderer::SelectedMeshId%/ctrl%">
 
 <script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
 [
@@ -103,34 +103,45 @@
 </script>
 
 </div>
-<div id="GCodePathRenderer" data-tchmi-type="TcHmi.Controls.TcHmiCncControls.GCodePathRenderer" data-tchmi-height="486" data-tchmi-height-unit="px" data-tchmi-left="729" data-tchmi-left-unit="px" data-tchmi-top="115" data-tchmi-top-unit="px" data-tchmi-width="665" data-tchmi-width-unit="px" data-tchmi-render-progress="true" data-tchmi-selected-mesh="%ctrl%GCodeEditor::SelectedLine%/ctrl%">
+<div id="GCodePathRenderer" data-tchmi-type="TcHmi.Controls.TcHmiCncControls.GCodePathRenderer" data-tchmi-height="486" data-tchmi-height-unit="px" data-tchmi-left="729" data-tchmi-left-unit="px" data-tchmi-top="113" data-tchmi-top-unit="px" data-tchmi-width="665" data-tchmi-width-unit="px" data-tchmi-render-progress="true" data-tchmi-selected-mesh="%ctrl%GCodeEditor::SelectedLine%/ctrl%">
 
 
 
 
 
-<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
-[
-  {
-    "event": "GCodePathRenderer.onPathSegmentPressed",
-    "actions": [
-      {
-        "objectType": "ControlApiFunction",
-        "active": true,
-        "control": "GCodeEditor",
-        "fn": "gotoLine",
-        "fnParams": [
-          {
-            "objectType": "Symbol",
-            "valueType": "tchmi:general#/definitions/String",
-            "symbolExpression": "%ctrl%GCodePathRenderer::SelectedMeshId%/ctrl%"
-          }
-        ],
-        "asyncWait": true
-      }
-    ]
+
+
+<script data-tchmi-target-attribute="data-tchmi-cnc-config" type="application/json">
+{
+  "IjkRelative": false,
+  "MaxArcRenderPoints": 32,
+  "ShowTooling": true
+}
+</script>
+
+
+
+
+
+
+
+
+
+
+
+<script data-tchmi-target-attribute="data-tchmi-tooling-config" type="application/json">
+{
+  "showTooling": true,
+  "rotationUnit": "Degrees",
+  "positionOffset": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 0.0,
+    "a": 90.0,
+    "b": 0.0,
+    "c": 0.0
   }
-]
+}
 </script>
 </div>
 <div id="TcHmiButton_3" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiButton" data-tchmi-height="50" data-tchmi-height-unit="px" data-tchmi-left="619" data-tchmi-left-unit="px" data-tchmi-text="Render" data-tchmi-top="611" data-tchmi-top-unit="px" data-tchmi-width="100" data-tchmi-width-unit="px" data-tchmi-word-wrap="true">
@@ -157,5 +168,16 @@
   }
 ]
 </script>
+</div>
+<div id="TcHmiTextbox" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextbox" data-tchmi-height="51" data-tchmi-height-unit="px" data-tchmi-left="321" data-tchmi-left-unit="px" data-tchmi-text="%ctrl%GCodePathRenderer::toolingPosition|BindingMode=TwoWay|BindingEvent=onUserInteractionFinished%/ctrl%" data-tchmi-top="52" data-tchmi-top-unit="px" data-tchmi-width="185" data-tchmi-width-unit="px">
+<script data-tchmi-target-attribute="data-tchmi-content-padding" type="application/json">
+{
+  "top": 3,
+  "right": 3,
+  "bottom": 3,
+  "left": 3
+}
+</script>
+
 </div>
 </div>

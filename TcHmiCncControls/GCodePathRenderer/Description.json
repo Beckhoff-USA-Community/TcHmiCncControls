@@ -105,9 +105,59 @@
       "defaultValue": false,
       "defaultValueInternal": false,
       "description": "Gets or sets rendering based on selected segment mesh Id."
+    },
+    {
+      "displayName": "CNC Config",
+      "name": "data-tchmi-cnc-config",
+      "propertyGetterName": "getCncConfig",
+      "propertySetterName": "setCncConfig",
+      "propertyName": "cncConfig",
+      "type": "tchmi:framework#/definitions/CncConfig",
+      "category": "Common",
+      "bindable": true,
+      "visible": true,
+      "defaultValue": {},
+      "defaultValueInternal": {},
+      "description": "CNC Machine and rendering config.",
+      "allowSymbolExpressionsInObject": true
+    },
+    {
+      "displayName": "Tooling Config",
+      "name": "data-tchmi-tooling-config",
+      "propertyGetterName": "getToolingConfig",
+      "propertySetterName": "setToolingConfig",
+      "propertyName": "toolingConfig",
+      "type": "tchmi:framework#/definitions/ToolingConfig",
+      "category": "Tooling",
+      "bindable": true,
+      "visible": true,
+      "defaultValue": {},
+      "defaultValueInternal": {},
+      "description": "Tooling configuration.",
+      "allowSymbolExpressionsInObject": true
+    },
+    {
+      "displayName": "Tooling Position",
+      "name": "data-tchmi-tooling-position",
+      "propertyGetterName": "getToolingPosition",
+      "propertySetterName": "setToolingPosition",
+      "propertyName": "toolingPosition",
+      "type": "tchmi:framework#/definitions/ToolPosition",
+      "category": "Tooling",
+      "bindable": true,
+      "visible": true,
+      "defaultValue": {},
+      "defaultValueInternal": {},
+      "description": "Real time tooling position.",
+      "allowSymbolExpressionsInObject": true
     }
   ],
-  "attributeCategories": [],
+  "attributeCategories": [
+    {
+      "name": "Tooling",
+      "displayPriority": 4
+    }
+  ],
   "functions": [
     {
       "category": "Common",
