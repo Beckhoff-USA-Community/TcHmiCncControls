@@ -149,6 +149,18 @@
       "defaultValueInternal": {},
       "description": "Real time tooling position.",
       "allowSymbolExpressionsInObject": true
+    },
+    {
+      "displayName": "SceneBackgroundColor",
+      "name": "data-tchmi-scene-bgcolor",
+      "propertyGetterName": "getSceneBgColor",
+      "propertySetterName": "setSceneBgColor",
+      "propertyName": "sceneBgColor",
+      "type": "tchmi:framework#/definitions/SolidColor",
+      "category": "Colors",
+      "defaultValue": null,
+      "defaultValueInternal": null,
+      "description": "Rendering scene background color."
     }
   ],
   "attributeCategories": [
@@ -187,16 +199,7 @@
       "description": "Resets camera view."
     }
   ],
-  "events": [
-    {
-      "category": "Operator",
-      "displayName": "onPathSegmentPressed",
-      "heritable": true,
-      "name": "onPathSegmentPressed",
-      "visible": true,
-      "description": "Fires when a rendered path segment is clicked or pressed."
-    }
-  ],
+  "events": [],
   "dataTypes": [
     {
       "schema": "Schema/Types.Schema.json"

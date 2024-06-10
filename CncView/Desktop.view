@@ -140,7 +140,7 @@
     "b": 0.0,
     "c": 0.0
   },
-  "cameraFollow": true
+  "cameraFollow": false
 }
 </script>
 
@@ -154,6 +154,12 @@
   "a": 0.0,
   "b": 0.0,
   "c": 0.0
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-scene-bgcolor" type="application/json">
+{
+  "color": "rgba(75, 75, 75, 1)"
 }
 </script>
 </div>

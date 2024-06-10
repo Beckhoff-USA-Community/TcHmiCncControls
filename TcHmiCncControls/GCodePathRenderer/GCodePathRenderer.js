@@ -56,6 +56,7 @@ var TcHmi;
                     this.__toolingPos = {
                         x: 0, y: 0, z: 0, a: 0, b: 0, c: 0
                     };
+                    this.__sceneBgColor = null;
                 }
 
                 /**
@@ -150,6 +151,12 @@ var TcHmi;
                         // optimization
                         scene.skipPointerMovePicking = true;
 
+                        // background color
+                        if (this.__sceneBgColor) {
+                            const [r, g, b, a] = this.__sceneBgColor.color.match(/[\d\.]+/g).map(Number);
+                            scene.clearColor = new BABYLON.Color4((r / 255), (g / 255), (b / 255), a);
+                        }
+
                         // mesh onClick event
                         scene.onPointerObservable.add((pointerInfo) => {
                             if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERDOWN) {
@@ -182,7 +189,9 @@ var TcHmi;
                     // scroll zoom config
                     camera.minZ = 0;
                     camera.wheelPrecision = 40;
-                    camera.lowerRadiusLimit = null;
+
+                    // prevent zoom through
+                    camera.lowerRadiusLimit = 0.5;
                     camera.useFramingBehavior = false;
                 }
 
@@ -190,7 +199,6 @@ var TcHmi;
                 __onMeshPicked(pickInfo) {
                     const id = this.__lineData.faceIdMap.get(pickInfo.subMeshFaceId);
                     this.__selectedMeshId = id;
-                    TcHmi.EventProvider.raise(`${this.getId()}.onPathSegmentPressed`);
                     TcHmi.EventProvider.raise(`${this.getId()}.onPropertyChanged`, {
                         propertyName: "SelectedMeshId",
                     });
@@ -436,6 +444,14 @@ var TcHmi;
 
                 setToolingPosition(value) {
                     this.__resolveObjectProperty('toolingPosition', value, this.__updateTooling);
+                }
+
+                getSceneBgColor() {
+                    return this.__sceneBgColor;
+                }
+
+                setSceneBgColor(value) {
+                    this.__sceneBgColor = value;
                 }
             }
             TcHmiCncControls.GCodePathRenderer = GCodePathRenderer;
