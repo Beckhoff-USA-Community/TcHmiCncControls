@@ -280,13 +280,23 @@ var TcHmi;
 
                 // update tooling
                 __updateTooling(pos) {
+
                     if (!this.__scene)
                         return;
 
-                    let mesh = this.__scene.getMeshByName("tool");
-                    if (!mesh) mesh = BABYLON.MeshBuilder.CreateCylinder("tool", { diameter: 0.1, height: 0.5 });
+                    this.__toolingPos = pos;
 
-                    console.log(this.__toolingConfig);
+                    let mesh = this.__scene.getMeshByName("tool");
+
+                    if (!this.__toolingConfig.showTooling) {
+                        // hide mesh
+                        mesh?.dispose();
+                        return;
+                    } else {
+                        mesh.visible = true;
+                    }
+
+                    if (!mesh) mesh = BABYLON.MeshBuilder.CreateCylinder("tool", { diameter: 0.1, height: 0.5 });
 
                     mesh.position.x = this.__toolingConfig.positionOffset.x + pos.x;
                     mesh.position.y = this.__toolingConfig.positionOffset.y + pos.y;
@@ -302,6 +312,56 @@ var TcHmi;
                         mesh.rotation.y = this.__toolingConfig.positionOffset.b + pos.b;
                         mesh.rotation.z = this.__toolingConfig.positionOffset.c + pos.c;
                     }
+                }
+
+                __updateToolingConfig(config) {
+                    this.__toolingConfig = config;
+                    this.__updateTooling(this.__toolingPos);
+                }
+
+                __resolveObjectProperty(propertyName, value, processFn) {
+
+                    // get state references
+                    const parent = this;
+
+                    // callback fn
+                    function callbackFn(data) {
+                        if (parent.__isAttached === false) { // While not attached attribute should only be processed once during initializing phase.
+                            parent.__suspendObjectResolver(propertyName);
+                        }
+
+                        if (data.error !== TcHmi.Errors.NONE) {
+                            TcHmi.Log.error('[Source=Control, Module=TcHmi.Controls.System.TcHmiControl, Id=' +
+                                parent.getId() + ', Attribute=Value] Resolving symbols from object failed with error: ' + TcHmi.Log.buildMessage(data.details));
+                            return;
+                        }
+
+                        if (processFn) {
+                            processFn.bind(parent)(data.value);
+                            TcHmi.EventProvider.raise(parent.__id + '.onPropertyChanged', { propertyName: propertyName });
+                        }
+                    }
+                    
+                    let convertedValue = TcHmi.ValueConverter.toObject(value);
+                    if (convertedValue === null) {
+                        // if we have no value to set we have to fall back to the defaultValueInternal from description.json
+                        convertedValue = this.getAttributeDefaultValueInternal(propertyName);
+                    }
+
+                    let resolverInfo = this.__objectResolvers.get(propertyName);
+                    if (resolverInfo) {
+                        if (resolverInfo.watchDestroyer) {
+                            resolverInfo.watchDestroyer();
+                        }
+                        resolverInfo.resolver.destroy();
+                    }
+
+                    let resolver = new TcHmi.Symbol.ObjectResolver(convertedValue);
+                    this.__objectResolvers.set(propertyName, {
+                        resolver: resolver,
+                        watchCallback: callbackFn,
+                        watchDestroyer: resolver.watch(callbackFn)
+                    });
                 }
 
                 /**
@@ -359,9 +419,7 @@ var TcHmi;
                 }
 
                 setToolingConfig(value) {
-                    this.__toolingConfig.showTooling = value?.showTooling;
-                    this.__toolingConfig.positionOffset = value?.positionOffset;
-                    this.__toolingConfig.rotationUnit = value?.rotationUnit;
+                    this.__resolveObjectProperty('toolingConfig', value, this.__updateToolingConfig);
                 }
 
                 getToolingPosition() {
@@ -369,18 +427,7 @@ var TcHmi;
                 }
 
                 setToolingPosition(value) {
-
-                    // normalize input
-                    this.__toolingPos.x = value.x || value.X || 0;
-                    this.__toolingPos.y = value.y || value.Y || 0;
-                    this.__toolingPos.z = value.z || value.Z || 0;
-                    this.__toolingPos.a = value.a || value.A || 0;
-                    this.__toolingPos.b = value.b || value.B || 0;
-                    this.__toolingPos.c = value.c || value.C || 0;
-
-                    if (this.__toolingConfig.showTooling) {
-                        this.__updateTooling(this.__toolingPos);
-                    }
+                    this.__resolveObjectProperty('toolingPosition', value, this.__updateTooling);
                 }
             }
             TcHmiCncControls.GCodePathRenderer = GCodePathRenderer;

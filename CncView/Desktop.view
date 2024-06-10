@@ -130,7 +130,7 @@
 
 <script data-tchmi-target-attribute="data-tchmi-tooling-config" type="application/json">
 {
-  "showTooling": true,
+  "showTooling": "%i%showTool%/i%",
   "rotationUnit": "Degrees",
   "positionOffset": {
     "x": 0.0,
@@ -143,9 +143,11 @@
 }
 </script>
 
+
+
 <script data-tchmi-target-attribute="data-tchmi-tooling-position" type="application/json">
 {
-  "x": 0.0,
+  "x": "%i%XPos%/i%",
   "y": 0.0,
   "z": 0.0,
   "a": 0.0,
@@ -179,7 +181,7 @@
 ]
 </script>
 </div>
-<div id="TcHmiTextbox" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextbox" data-tchmi-height="51" data-tchmi-height-unit="px" data-tchmi-left="321" data-tchmi-left-unit="px" data-tchmi-text="%ctrl%GCodePathRenderer::toolingPosition|BindingMode=TwoWay|BindingEvent=onUserInteractionFinished%/ctrl%" data-tchmi-top="52" data-tchmi-top-unit="px" data-tchmi-width="185" data-tchmi-width-unit="px">
+<div id="TcHmiTextbox" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextbox" data-tchmi-height="51" data-tchmi-height-unit="px" data-tchmi-left="321" data-tchmi-left-unit="px" data-tchmi-top="52" data-tchmi-top-unit="px" data-tchmi-width="185" data-tchmi-width-unit="px" data-tchmi-text="%i%XPos|BindingMode=TwoWay|BindingEvent=onUserInteractionFinished%/i%">
 <script data-tchmi-target-attribute="data-tchmi-content-padding" type="application/json">
 {
   "top": 3,

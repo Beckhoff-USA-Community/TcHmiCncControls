@@ -118,8 +118,7 @@
       "visible": true,
       "defaultValue": {},
       "defaultValueInternal": {},
-      "description": "CNC Machine and rendering config.",
-      "allowSymbolExpressionsInObject": true
+      "description": "CNC Machine and rendering config."
     },
     {
       "displayName": "Tooling Config",
