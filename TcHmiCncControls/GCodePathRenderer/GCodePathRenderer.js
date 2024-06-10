@@ -50,7 +50,8 @@ var TcHmi;
                         positionOffset: {
                             x: 0, y: 0, z: 0, a: 0, b: 0, c: 0
                         },
-                        rotationUnit: "Degrees"
+                        rotationUnit: "Degrees",
+                        cameraFollow: false
                     };
                     this.__toolingPos = {
                         x: 0, y: 0, z: 0, a: 0, b: 0, c: 0
@@ -292,8 +293,6 @@ var TcHmi;
                         // hide mesh
                         mesh?.dispose();
                         return;
-                    } else {
-                        mesh.visible = true;
                     }
 
                     if (!mesh) mesh = BABYLON.MeshBuilder.CreateCylinder("tool", { diameter: 0.1, height: 0.5 });
@@ -311,6 +310,11 @@ var TcHmi;
                         mesh.rotation.x = this.__toolingConfig.positionOffset.a + pos.a;
                         mesh.rotation.y = this.__toolingConfig.positionOffset.b + pos.b;
                         mesh.rotation.z = this.__toolingConfig.positionOffset.c + pos.c;
+                    }
+
+                    if (this.__toolingConfig.cameraFollow) {
+                        const camera = this.__scene.activeCamera;
+                        camera?.setTarget(mesh);
                     }
                 }
 
@@ -385,6 +389,10 @@ var TcHmi;
                     this.__pathString = value;
                     if (value.length)
                         this.__parseGCode(value);
+                }
+
+                resetView() {
+                    this.__initCamera();
                 }
 
                 getSelectedMeshId() {

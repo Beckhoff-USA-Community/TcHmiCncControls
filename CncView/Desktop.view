@@ -130,7 +130,7 @@
 
 <script data-tchmi-target-attribute="data-tchmi-tooling-config" type="application/json">
 {
-  "showTooling": "%i%showTool%/i%",
+  "showTooling": true,
   "rotationUnit": "Degrees",
   "positionOffset": {
     "x": 0.0,
@@ -139,7 +139,8 @@
     "a": 90.0,
     "b": 0.0,
     "c": 0.0
-  }
+  },
+  "cameraFollow": true
 }
 </script>
 

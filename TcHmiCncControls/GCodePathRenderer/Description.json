@@ -165,7 +165,7 @@
       "name": "setPath",
       "type": null,
       "visible": true,
-      "description": "Writes the code path to render",
+      "description": "Writes the code path to render.",
       "params": [
         {
           "displayName": "Path",
@@ -176,6 +176,15 @@
           "description": "GCode path as string"
         }
       ]
+    },
+    {
+      "category": "Common",
+      "displayName": "ResetCamera",
+      "heritable": true,
+      "name": "resetCamera",
+      "type": null,
+      "visible": true,
+      "description": "Resets camera view."
     }
   ],
   "events": [

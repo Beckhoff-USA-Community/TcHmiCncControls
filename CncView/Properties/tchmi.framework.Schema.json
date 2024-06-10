@@ -2863,12 +2863,16 @@
         },
         "positionOffset": {
           "$ref": "tchmi:framework#/definitions/ToolPosition"
+        },
+        "cameraFollow": {
+          "type": "boolean"
         }
       },
       "propertiesMeta": [
         {
           "name": "showTooling",
           "displayName": "Show Tooling",
+          "description": "Show tooling model in rendering.",
           "displayPriority": 1,
           "defaultValue": true,
           "defaultValueInternal": true
@@ -2876,6 +2880,7 @@
         {
           "name": "rotationUnit",
           "displayName": "Rotation Units",
+          "description": "Unit type for rotational values.",
           "displayPriority": 2,
           "defaultValue": "Degrees",
           "defaultValueInternal": "Degrees"
@@ -2883,6 +2888,7 @@
         {
           "name": "positionOffset",
           "displayName": "Position Offset",
+          "description": "Offset position values for tool rendering.",
           "displayPriority": 3,
           "defaultValue": {
             "x": 0,
@@ -2900,6 +2906,14 @@
             "b": 0,
             "c": 0
           }
+        },
+        {
+          "name": "cameraFollow",
+          "displayName": "Camera Follows",
+          "description": "Camera follows tool position when true.",
+          "displayPriority": 4,
+          "defaultValue": false,
+          "defaultValueInternal": false
         }
       ]
     },
