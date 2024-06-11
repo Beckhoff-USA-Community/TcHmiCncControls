@@ -38,6 +38,7 @@ var TcHmi;
                     this.__engine = null;
                     this.__scene = null;
                     this.__lineData = {};
+                    this.__selectionZoomData = {};
 
                     this.__pathString = "";
                     this.__selectedMeshId = 0;
@@ -57,6 +58,7 @@ var TcHmi;
                         x: 0, y: 0, z: 0, a: 0, b: 0, c: 0
                     };
                     this.__sceneBgColor = null;
+                    this.__selectionZoom = false;
                 }
 
                 /**
@@ -148,30 +150,110 @@ var TcHmi;
                         // give time for init, then resize
                         setTimeout(() => { engine.resize(); }, 1000);
 
-                        // optimization
-                        scene.skipPointerMovePicking = true;
-
                         // background color
                         if (this.__sceneBgColor) {
                             const [r, g, b, a] = this.__sceneBgColor.color.match(/[\d\.]+/g).map(Number);
                             scene.clearColor = new BABYLON.Color4((r / 255), (g / 255), (b / 255), a);
                         }
 
-                        // mesh onClick event
+                        // mouse events
                         scene.onPointerObservable.add((pointerInfo) => {
-                            if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERDOWN) {
-                                // ignore right-click
-                                if (pointerInfo.event.inputIndex === 4) return;
-                                if (pointerInfo.pickInfo.hit) {
-                                    this.__onMeshPicked(pointerInfo.pickInfo);
-                                }
-                            }
+                            switch (pointerInfo.type) {
+                                case BABYLON.PointerEventTypes.POINTERDOWN:
+                                    // ignore right-click
+                                    if (pointerInfo.event.inputIndex === 4) return;
 
+                                    // left-click on mesh
+                                    if (pointerInfo.pickInfo.hit) {
+                                        // if not drawing zoom box
+                                        if (!this.__selectionZoomData.drag) {
+                                            this.__onMeshPicked(pointerInfo.pickInfo);
+                                            return;
+                                        }
+                                    }
+
+                                    // selection zoom box
+                                    if (this.__selectionZoom) {
+                                        if (!this.__selectionZoomData.drag)
+                                            this.__onSelectionZoomStart(pointerInfo.pickInfo);
+                                        else {
+                                            this.__onSelectionZoomEnd();
+                                            return;
+                                        }
+                                    }
+
+                                    break;
+
+                                case BABYLON.PointerEventTypes.POINTERMOVE:
+                                    if (this.__selectionZoom && this.__selectionZoomData.drag)
+                                        this.__onSelectionZoomDrag(pointerInfo.pickInfo);
+                                    break;
+
+                                default:
+                                    break;
+                            }
                         });
 
                         // update scene reference
                         this.__scene = scene;
                     }
+                }
+
+                __onSelectionZoomStart(pickInfo) {
+                    const distance = this.__scene.activeCamera.radius;
+                    const start = new BABYLON.Vector3(
+                        pickInfo.ray.origin.x + pickInfo.ray.direction.x * distance,
+                        pickInfo.ray.origin.y + pickInfo.ray.direction.y * distance,
+                        0
+                    );
+
+                    this.__selectionZoomData.mesh = BABYLON.MeshBuilder.CreateLines(
+                        "zoomBox",
+                        {
+                            points: [start, 0, start, 0, start],
+                            updatable: true
+                        }
+                    );
+
+                    this.__selectionZoomData.start = start;
+                    this.__selectionZoomData.drag = true;
+                }
+
+                __onSelectionZoomDrag(pickInfo) {
+                    const distance = this.__scene.activeCamera.radius;
+                    const start = this.__selectionZoomData.start;
+                    const end = new BABYLON.Vector3(
+                        pickInfo.ray.origin.x + pickInfo.ray.direction.x * distance,
+                        pickInfo.ray.origin.y + pickInfo.ray.direction.y * distance,
+                        0
+                    );
+                    const startB = new BABYLON.Vector3(end.x, start.y, start.z);
+                    const endB = new BABYLON.Vector3(start.x, end.y, end.z);
+
+                    this.__selectionZoomData.mesh = BABYLON.MeshBuilder.CreateLines(
+                        "zoomBox",
+                        {
+                            points: [start, startB, end, endB, start],
+                            updatable: true,
+                            instance: this.__selectionZoomData.mesh
+                        }
+                    );
+                }
+
+                __onSelectionZoomEnd() {
+                    //this.__scene.activeCamera.setTarget(this.__selectionZoomData.mesh);
+                    console.log(this.__selectionZoomData.mesh);
+                    this.__selectionZoomData.mesh.dispose();
+                    this.__selectionZoomData.drag = false;
+                }
+
+                // mesh clicked handler
+                __onMeshPicked(pickInfo) {
+                    const id = this.__lineData.faceIdMap.get(pickInfo.subMeshFaceId);
+                    this.__selectedMeshId = id;
+                    TcHmi.EventProvider.raise(`${this.getId()}.onPropertyChanged`, {
+                        propertyName: "SelectedMeshId",
+                    });
                 }
 
                 __initCamera(focusMesh) {
@@ -186,6 +268,10 @@ var TcHmi;
                     camera.framingBehavior.radiusScale = 0.70;
                     camera.setTarget(focusMesh);
 
+                    // reset rotation
+                    camera.alpha = Math.PI / 2;
+                    camera.beta = Math.PI / 2;
+
                     // scroll zoom config
                     camera.minZ = 0;
                     camera.wheelPrecision = 40;
@@ -193,15 +279,19 @@ var TcHmi;
                     // prevent zoom through
                     camera.lowerRadiusLimit = 0.5;
                     camera.useFramingBehavior = false;
+
+                    this.__toggleSelectionZoom(this.__selectionZoom);
                 }
 
-                // mesh clicked handler
-                __onMeshPicked(pickInfo) {
-                    const id = this.__lineData.faceIdMap.get(pickInfo.subMeshFaceId);
-                    this.__selectedMeshId = id;
-                    TcHmi.EventProvider.raise(`${this.getId()}.onPropertyChanged`, {
-                        propertyName: "SelectedMeshId",
-                    });
+                __toggleSelectionZoom(enabled) {
+                    if (!this.__scene) return;
+
+                    // get active camera
+                    const camera = this.__scene.activeCamera;
+
+                    // turn off mouse1 camera rotation
+                    camera.angularSensibilityX = (enabled) ? 1000000 : 3000;
+                    camera.angularSensibilityY = (enabled) ? 1000000 : 3000;
                 }
 
                 __parseGCode(gcode) {
@@ -294,30 +384,31 @@ var TcHmi;
                         return;
 
                     this.__toolingPos = pos;
-
                     let mesh = this.__scene.getMeshByName("tool");
 
                     if (!this.__toolingConfig.showTooling) {
-                        // hide mesh
+                        // remove mesh
                         mesh?.dispose();
                         return;
                     }
 
-                    if (!mesh) mesh = BABYLON.MeshBuilder.CreateCylinder("tool", { diameter: 0.1, height: 0.5 });
+                    if (!mesh)
+                        mesh = BABYLON.MeshBuilder.CreateCylinder("tool", { diameter: 0.1, height: 0.5 });
 
                     mesh.position.x = this.__toolingConfig.positionOffset.x + pos.x;
                     mesh.position.y = this.__toolingConfig.positionOffset.y + pos.y;
                     mesh.position.z = this.__toolingConfig.positionOffset.z + pos.z;
 
                     // abc rotation
+                    mesh.rotation = BABYLON.Vector3.Zero();
                     if (this.__toolingConfig.rotationUnit === "Degrees") {
-                        mesh.rotation.x = (this.__toolingConfig.positionOffset.a + pos.a) * Math.PI / 180;
-                        mesh.rotation.y = (this.__toolingConfig.positionOffset.b + pos.b) * Math.PI / 180;
-                        mesh.rotation.z = (this.__toolingConfig.positionOffset.c + pos.c) * Math.PI / 180;
+                        mesh.rotate(BABYLON.Axis.X, (this.__toolingConfig.positionOffset.a + pos.a) * Math.PI / 180, BABYLON.Space.WORLD);
+                        mesh.rotate(BABYLON.Axis.Y, (this.__toolingConfig.positionOffset.b + pos.b) * Math.PI / 180, BABYLON.Space.WORLD);
+                        mesh.rotate(BABYLON.Axis.Z, (this.__toolingConfig.positionOffset.c + pos.c) * Math.PI / 180, BABYLON.Space.WORLD);
                     } else {
-                        mesh.rotation.x = this.__toolingConfig.positionOffset.a + pos.a;
-                        mesh.rotation.y = this.__toolingConfig.positionOffset.b + pos.b;
-                        mesh.rotation.z = this.__toolingConfig.positionOffset.c + pos.c;
+                        mesh.rotate(BABYLON.Axis.X, this.__toolingConfig.positionOffset.a + pos.a, BABYLON.Space.WORLD);
+                        mesh.rotate(BABYLON.Axis.Y, this.__toolingConfig.positionOffset.b + pos.b, BABYLON.Space.WORLD);
+                        mesh.rotate(BABYLON.Axis.Z, this.__toolingConfig.positionOffset.c + pos.c, BABYLON.Space.WORLD);
                     }
 
                     if (this.__toolingConfig.cameraFollow) {
@@ -335,24 +426,6 @@ var TcHmi;
 
                     // get state references
                     const parent = this;
-
-                    // callback fn
-                    function callbackFn(data) {
-                        if (parent.__isAttached === false) { // While not attached attribute should only be processed once during initializing phase.
-                            parent.__suspendObjectResolver(propertyName);
-                        }
-
-                        if (data.error !== TcHmi.Errors.NONE) {
-                            TcHmi.Log.error('[Source=Control, Module=TcHmi.Controls.System.TcHmiControl, Id=' +
-                                parent.getId() + ', Attribute=Value] Resolving symbols from object failed with error: ' + TcHmi.Log.buildMessage(data.details));
-                            return;
-                        }
-
-                        if (processFn) {
-                            processFn.bind(parent)(data.value);
-                            TcHmi.EventProvider.raise(parent.__id + '.onPropertyChanged', { propertyName: propertyName });
-                        }
-                    }
                     
                     let convertedValue = TcHmi.ValueConverter.toObject(value);
                     if (convertedValue === null) {
@@ -374,6 +447,24 @@ var TcHmi;
                         watchCallback: callbackFn,
                         watchDestroyer: resolver.watch(callbackFn)
                     });
+
+                    // callback fn
+                    function callbackFn(data) {
+                        if (parent.__isAttached === false) { // While not attached attribute should only be processed once during initializing phase.
+                            parent.__suspendObjectResolver(propertyName);
+                        }
+
+                        if (data.error !== TcHmi.Errors.NONE) {
+                            TcHmi.Log.error('[Source=Control, Module=TcHmi.Controls.System.TcHmiControl, Id=' +
+                                parent.getId() + ', Attribute=Value] Resolving symbols from object failed with error: ' + TcHmi.Log.buildMessage(data.details));
+                            return;
+                        }
+
+                        if (processFn) {
+                            processFn.bind(parent)(data.value);
+                            TcHmi.EventProvider.raise(parent.__id + '.onPropertyChanged', { propertyName: propertyName });
+                        }
+                    }
                 }
 
                 /**
@@ -393,15 +484,20 @@ var TcHmi;
                     this.__engine?.dispose();
                 }
 
+                /// public methods
+
                 setPath(value) {
                     this.__pathString = value;
                     if (value.length)
                         this.__parseGCode(value);
                 }
 
-                resetView() {
-                    this.__initCamera();
+                resetCamera() {
+                    if (this.__lineData.lineSystem)
+                        this.__initCamera(this.__lineData.lineSystem);
                 }
+
+                /// properties
 
                 getSelectedMeshId() {
                     return this.__selectedMeshId;
@@ -420,6 +516,15 @@ var TcHmi;
 
                 setRenderProgress(value) {
                     this.__renderProgress = value;
+                }
+
+                getSelectionZoom() {
+                    return this.__selectionZoom;
+                }
+
+                setSelectionZoom(value) {
+                    this.__selectionZoom = value;
+                    this.__toggleSelectionZoom(value);
                 }
 
                 getCncConfig() {

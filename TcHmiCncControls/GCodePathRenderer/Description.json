@@ -107,6 +107,20 @@
       "description": "Gets or sets rendering based on selected segment mesh Id."
     },
     {
+      "displayName": "Selection Zoom",
+      "name": "data-tchmi-selection-zoom",
+      "propertyGetterName": "getSelectionZoom",
+      "propertySetterName": "setSelectionZoom",
+      "propertyName": "selectionZoom",
+      "type": "tchmi:general#/definitions/Boolean",
+      "category": "Common",
+      "bindable": true,
+      "visible": true,
+      "defaultValue": false,
+      "defaultValueInternal": false,
+      "description": "Enables selection zoom."
+    },
+    {
       "displayName": "CNC Config",
       "name": "data-tchmi-cnc-config",
       "propertyGetterName": "getCncConfig",
