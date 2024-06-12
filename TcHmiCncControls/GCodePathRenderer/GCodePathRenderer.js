@@ -14,15 +14,6 @@ var TcHmi;
         (function (TcHmiCncControls) {
             class GCodePathRenderer extends TcHmi.Controls.System.TcHmiControl {
 
-                /*
-                Attribute philosophy
-                --------------------
-                - Local variables are not set in the class definition, so they have the value 'undefined'.
-                - During compilation, the Framework sets the value that is specified in the HTML or in the theme (possibly 'null') via normal setters.
-                - Because of the "changed detection" in the setter, the value is only processed once during compilation.
-                - Attention: If we have a Server Binding on an Attribute, the setter will be called once with null to initialize and later with the correct value.
-                */
-
                 /**
                  * Constructor of the control
                  * @param {JQuery} element Element from HTML (internal, do not use)
@@ -61,9 +52,6 @@ var TcHmi;
                     this.__selectionZoom = false;
                 }
 
-                /**
-                 * Raised after the control was added to the control cache and the constructors of all base classes were called.
-                 */
                 __previnit() {
                     // Fetch template root element
                     this.__elementTemplateRoot = this.__element.find('.TcHmi_Controls_TcHmiCncControls_GCodePathRenderer-Template');
@@ -82,40 +70,16 @@ var TcHmi;
                     // Call __previnit of base class
                     super.__previnit();
                 }
-                /**
-                 * Is called during control initialization after the attribute setters have been called. 
-                 * @returns {void}
-                 */
+
                 __init() {
                     super.__init();
                     this.__initScene();
                 }
-                /**
-                 * Is called by the system after the control instance is inserted into the active DOM.
-                 * Is only allowed to be called from the framework itself!
-                 */
                 __attach() {
                     super.__attach();
-                    /**
-                     * Initialize everything which is only available while the control is part of the active dom.
-                     */
                 }
-                /**
-                 * Is called by the system when the control instance is no longer part of the active DOM.
-                 * Is only allowed to be called from the framework itself!
-                 */
                 __detach() {
                     super.__detach();
-
-                    /**
-                     * Disable everything that is not needed while the control is not part of the active DOM.
-                     * For example, there is usually no need to listen for events!
-                     */
-                }
-
-                __handleResize() {
-                    // resize scene if parent element size changes
-                    this.__engine?.resize();
                 }
 
                 // init / re-init babylon scene
@@ -134,6 +98,13 @@ var TcHmi;
                         // init camera
                         const camera = new BABYLON.ArcRotateCamera(
                             "camera0", Math.PI / 2, Math.PI / 2, 7, BABYLON.Vector3.Zero(), scene);
+
+                        // scroll zoom config
+                        camera.minZ = 0;
+                        camera.wheelPrecision = 40;
+
+                        // prevent zoom through
+                        camera.lowerRadiusLimit = 0.5;
                         camera.attachControl();
 
                         const _ = new BABYLON.Debug.AxesViewer(scene, 0.5)
@@ -162,31 +133,22 @@ var TcHmi;
                                 case BABYLON.PointerEventTypes.POINTERDOWN:
                                     // ignore right-click
                                     if (pointerInfo.event.inputIndex === 4) return;
+                                    if (!pointerInfo.pickInfo.hit) return;
 
-                                    // left-click on mesh
-                                    if (pointerInfo.pickInfo.hit) {
-                                        // if not drawing zoom box
-                                        if (!this.__selectionZoomData.drag) {
+                                    if (!this.__selectionZoomData.drag) {
+                                        if (pointerInfo.pickInfo.pickedMesh.id === "lineSystem") {
                                             this.__onMeshPicked(pointerInfo.pickInfo);
-                                            return;
-                                        }
-                                    }
-
-                                    // selection zoom box
-                                    if (this.__selectionZoom) {
-                                        if (!this.__selectionZoomData.drag)
+                                        } else {
+                                            if (!this.__selectionZoom) return;
                                             this.__onSelectionZoomStart(pointerInfo.pickInfo);
-                                        else {
-                                            this.__onSelectionZoomEnd();
-                                            return;
                                         }
-                                    }
+                                    } else this.__onSelectionZoomEnd();
 
                                     break;
 
                                 case BABYLON.PointerEventTypes.POINTERMOVE:
                                     if (this.__selectionZoom && this.__selectionZoomData.drag)
-                                        this.__onSelectionZoomDrag(pointerInfo.pickInfo);
+                                        this.__onSelectionZoomDrag(scene.pick(scene.pointerX, scene.pointerY));
                                     break;
 
                                 default:
@@ -199,14 +161,14 @@ var TcHmi;
                     }
                 }
 
-                __onSelectionZoomStart(pickInfo) {
-                    const distance = this.__scene.activeCamera.radius;
-                    const start = new BABYLON.Vector3(
-                        pickInfo.ray.origin.x + pickInfo.ray.direction.x * distance,
-                        pickInfo.ray.origin.y + pickInfo.ray.direction.y * distance,
-                        0
-                    );
+                __handleResize() {
+                    // resize scene if parent element size changes
+                    this.__engine?.resize();
+                }
 
+                __onSelectionZoomStart(pickInfo) {
+
+                    const start = pickInfo.pickedPoint;
                     this.__selectionZoomData.mesh = BABYLON.MeshBuilder.CreateLines(
                         "zoomBox",
                         {
@@ -220,13 +182,10 @@ var TcHmi;
                 }
 
                 __onSelectionZoomDrag(pickInfo) {
-                    const distance = this.__scene.activeCamera.radius;
+
+                    if (!pickInfo.pickedPoint) return;
                     const start = this.__selectionZoomData.start;
-                    const end = new BABYLON.Vector3(
-                        pickInfo.ray.origin.x + pickInfo.ray.direction.x * distance,
-                        pickInfo.ray.origin.y + pickInfo.ray.direction.y * distance,
-                        0
-                    );
+                    const end = pickInfo.pickedPoint;
                     const startB = new BABYLON.Vector3(end.x, start.y, start.z);
                     const endB = new BABYLON.Vector3(start.x, end.y, end.z);
 
@@ -238,13 +197,17 @@ var TcHmi;
                             instance: this.__selectionZoomData.mesh
                         }
                     );
+
+                    this.__selectionZoomData.end = end;
                 }
 
                 __onSelectionZoomEnd() {
-                    //this.__scene.activeCamera.setTarget(this.__selectionZoomData.mesh);
-                    console.log(this.__selectionZoomData.mesh);
-                    this.__selectionZoomData.mesh.dispose();
+
+                    this.__selectionZoomData.mesh.refreshBoundingInfo();
+                    this.__focusMesh(this.__selectionZoomData.mesh);
+
                     this.__selectionZoomData.drag = false;
+                    this.__selectionZoomData.mesh.dispose();
                 }
 
                 // mesh clicked handler
@@ -256,31 +219,26 @@ var TcHmi;
                     });
                 }
 
-                __initCamera(focusMesh) {
+                __focusMesh(mesh) {
 
                     if (!this.__scene) return;
 
                     // get active camera
                     const camera = this.__scene.activeCamera;
 
-                    // zoom to model
-                    camera.useFramingBehavior = true;
-                    camera.framingBehavior.radiusScale = 0.70;
-                    camera.setTarget(focusMesh);
+                    const bounds = mesh.getBoundingInfo();
 
-                    // reset rotation
-                    camera.alpha = Math.PI / 2;
-                    camera.beta = Math.PI / 2;
-
-                    // scroll zoom config
-                    camera.minZ = 0;
-                    camera.wheelPrecision = 40;
-
-                    // prevent zoom through
-                    camera.lowerRadiusLimit = 0.5;
-                    camera.useFramingBehavior = false;
-
-                    this.__toggleSelectionZoom(this.__selectionZoom);
+                    var framingBehavior = new BABYLON.FramingBehavior();
+                    framingBehavior.framingTime = 750;
+                    framingBehavior.radiusScale = 0.7;
+                    framingBehavior.autoCorrectCameraLimitsAndSensibility = false;
+                    framingBehavior.elevationReturnTime = -1;
+                    framingBehavior.attach(camera);
+                    framingBehavior.zoomOnBoundingInfo(bounds.maximum, bounds.minimum, false, () => {
+                        camera.alpha = Math.PI / 2;
+                        camera.beta = Math.PI / 2;
+                        framingBehavior.detach();
+                    });
                 }
 
                 __toggleSelectionZoom(enabled) {
@@ -333,6 +291,8 @@ var TcHmi;
                         },
                         this.__scene
                     );
+                    // pick threshhold
+                    ls.intersectionThreshold = 0.05;
 
                     // store line data in control state
                     this.__lineData.lineSystem = ls;
@@ -342,7 +302,22 @@ var TcHmi;
                     this.__lineData.faceIdMap = faceIdMap;
 
                     // set view
-                    this.__initCamera(ls);
+                    this.__focusMesh(ls);
+                    this.__toggleSelectionZoom(this.__selectionZoom);
+                    ls.showBoundingBox = true;
+
+                    // create (invisible) ground mesh
+                    const bounds = ls.getBoundingInfo();
+                    const bg = BABYLON.MeshBuilder.CreatePlane(
+                        "bg",
+                        {
+                            width: bounds.maximum.x + (bounds.maximum.x * 0.25),
+                            height: bounds.maximum.y + (bounds.maximum.y * 0.25),
+                            sideOrientation: BABYLON.Mesh.DOUBLESIDE
+                        },
+                    );
+                    bg.position = new BABYLON.Vector3(bounds.boundingBox.center.x, bounds.boundingBox.center.y, bounds.minimum.z);
+                    bg.visibility = 0;
                 }
 
                 // set mesh colors based on id
@@ -467,10 +442,6 @@ var TcHmi;
                     }
                 }
 
-                /**
-                 * Destroy the current control instance.
-                 * Will be called automatically if the framework destroys the control instance!
-                 */
                 destroy() {
                     /**
                      * Ignore while __keepAlive is set to true.
@@ -494,7 +465,7 @@ var TcHmi;
 
                 resetCamera() {
                     if (this.__lineData.lineSystem)
-                        this.__initCamera(this.__lineData.lineSystem);
+                        this.__focusMesh(this.__lineData.lineSystem);
                 }
 
                 /// properties
@@ -564,7 +535,5 @@ var TcHmi;
     })(Controls = TcHmi.Controls || (TcHmi.Controls = {}));
 })(TcHmi || (TcHmi = {}));
 
-/**
- * Register Control
- */
+// Register Control
 TcHmi.Controls.registerEx('GCodePathRenderer', 'TcHmi.Controls.TcHmiCncControls', TcHmi.Controls.TcHmiCncControls.GCodePathRenderer);
