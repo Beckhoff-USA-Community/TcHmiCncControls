@@ -27,7 +27,7 @@
     <HmiViewportUserScaleable>Default</HmiViewportUserScaleable>
     <HmiPostProcessing>True</HmiPostProcessing>
     <Name>CncView</Name>
-    <HmiCommunicationRouterPort>10108</HmiCommunicationRouterPort>
+    <HmiCommunicationRouterPort>10109</HmiCommunicationRouterPort>
     <HmiCommunicationServerAuthPort>13000</HmiCommunicationServerAuthPort>
     <HmiServerNodeAdvancedView>False</HmiServerNodeAdvancedView>
     <HmiInitial>1.12.760.59</HmiInitial>

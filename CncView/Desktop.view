@@ -140,7 +140,7 @@
     "b": 0.0,
     "c": 0.0
   },
-  "cameraFollow": false
+  "cameraFollow": "%i%followTool%/i%"
 }
 </script>
 
@@ -274,5 +274,7 @@
 }
 </script>
 
+</div>
+<div id="TcHmiToggleSwitch_1" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiToggleSwitch" data-tchmi-height="26" data-tchmi-height-unit="px" data-tchmi-left="729" data-tchmi-left-unit="px" data-tchmi-text="Follow Tool" data-tchmi-top="77" data-tchmi-top-unit="px" data-tchmi-width="149" data-tchmi-width-unit="px" data-tchmi-state-symbol="%i%followTool%/i%">
 </div>
 </div>

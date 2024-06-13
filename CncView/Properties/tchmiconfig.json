@@ -84,7 +84,7 @@
         "persist": false,
         "readonly": false
       },
-      "showTool": {
+      "followTool": {
         "value": false,
         "type": "tchmi:general#/definitions/BOOL",
         "persist": false,

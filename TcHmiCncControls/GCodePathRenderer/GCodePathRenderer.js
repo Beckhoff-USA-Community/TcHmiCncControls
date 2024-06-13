@@ -73,6 +73,7 @@ var TcHmi;
 
                 __init() {
                     super.__init();
+                    // init scene
                     this.__initScene();
                 }
                 __attach() {
@@ -107,8 +108,8 @@ var TcHmi;
                         camera.lowerRadiusLimit = 0.5;
                         camera.attachControl();
 
-                        const _ = new BABYLON.Debug.AxesViewer(scene, 0.5)
-                        const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(1, 1, 0), scene);
+                        new BABYLON.Debug.AxesViewer(scene, 0.5)
+                        new BABYLON.HemisphericLight("light", new BABYLON.Vector3(1, 1, 0), scene);
 
                         // resize engine on window resize
                         window.addEventListener("resize", this.__handleResize);
@@ -252,7 +253,7 @@ var TcHmi;
                     camera.angularSensibilityY = (enabled) ? 1000000 : 3000;
                 }
 
-                __parseGCode(gcode) {
+                __renderPath(gcode) {
                     
                     // trace path
                     this.__initScene();
@@ -304,7 +305,6 @@ var TcHmi;
                     // set view
                     this.__focusMesh(ls);
                     this.__toggleSelectionZoom(this.__selectionZoom);
-                    ls.showBoundingBox = true;
 
                     // create (invisible) ground mesh
                     const bounds = ls.getBoundingInfo();
@@ -460,7 +460,7 @@ var TcHmi;
                 setPath(value) {
                     this.__pathString = value;
                     if (value.length)
-                        this.__parseGCode(value);
+                        this.__renderPath(value);
                 }
 
                 resetCamera() {
