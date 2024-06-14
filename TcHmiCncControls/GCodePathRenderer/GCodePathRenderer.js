@@ -236,6 +236,7 @@ var TcHmi;
                     framingBehavior.elevationReturnTime = -1;
                     framingBehavior.attach(camera);
                     framingBehavior.zoomOnBoundingInfo(bounds.maximum, bounds.minimum, false, () => {
+                        // todo: normalize to Z axis or nah?
                         camera.alpha = Math.PI / 2;
                         camera.beta = Math.PI / 2;
                         framingBehavior.detach();

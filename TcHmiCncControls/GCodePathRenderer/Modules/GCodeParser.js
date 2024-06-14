@@ -5,61 +5,99 @@ class GCodeParser {
 
     constructor() {
 
-        // gcodes we care about
-        this.gCodes = [
-            'G0', 'G00',
-            'G1', 'G01',
-            'G2', 'G02',
-            'G3', 'G03',
-            'G4', 'G04',
-            'G17',
-            'G28',
-            'G70',
-            'G71',
-            'G90',
-            'G91'
-        ];
+        this.Gcodes = {
+            motion: [
+                'g0', 'g00',
+                'g1', 'g01',
+                'g2', 'g02',
+                'g3', 'g03',
+                'g28', 'g53'
+            ],
+            effect: [
+                'g17', 'g18', 'g19',
+                'g20', 'g21',
+                'g70', 'g71',
+                'g90', 'g91'
+            ],
+            arg: [
+                'x', 'y', 'z',
+                'a', 'b', 'c',
+                'i', 'j', 'k', 'r'
+            ],
+            ignore: [
+                'g4', 'g04',
+                'm', 's'
+            ]
+        };
 
-        this.modalGcodes = [
-            'G0', 'G00',
-            'G1', 'G01',
-            'G2', 'G02',
-            'G3', 'G03'
-        ];
-
-        this.modalParams = [
-            'X', 'Y', 'Z'
+        // G04 sometimes receives 'X' param
+        this.skipArgs = [
+            {
+                code: 'g4',
+                argCount: 1
+            },
+            {
+                code: 'g04',
+                argCount: 1
+            }
         ];
     }
 
-    // parses gcode string and returns object array
     Parse(gcode) {
 
-        const parsed = [];
         const lines = gcode.split("\n");
-        let prevCode = "";
-        lines.forEach((line, i) => {
-            // clean and tokenize line
-            const tokens = this.tokenize(this.clean(line));
-            if (tokens && tokens.length) {
-                // check for codes
-                if (tokens.some(x => this.gCodes.includes(x.toUpperCase()))) {
-                    // check line for multiple codes
-                    const codes = this.splitList(tokens);
-                    const structs = codes.map(x => new GCodeParseStruct(x, i));
-                    parsed.push(...structs);
-                    // get previous valid gcode for if subsequent lines are modal
-                    prevCode = structs.filter(x => this.modalGcodes.includes(x.code.toUpperCase()))
-                        .pop()?.code ?? prevCode;
-                } else {
-                    // line contains no G code, but modal params
-                    if (tokens.some(x => this.modalParams.some(y => x.toUpperCase().includes(y)))) {
-                        parsed.push(new GCodeParseStruct([prevCode, ...tokens], i));
-                    }
+        
+        const getTokenType = (t) => {
+            if (this.Gcodes.motion.includes(t))
+                return 'motion';
+            else if (this.Gcodes.effect.includes(t))
+                return 'effect';
+            else if (this.Gcodes.arg.some(x => t.startsWith(x)))
+                return 'arg';
+            else if (this.Gcodes.ignore.some(x => t.startsWith(x)))
+                return 'ignore';
+            else return 'unknown';
+        }
+
+        let prevMotionCode;
+        const parsed = [];
+        for (let i = 0; i < lines.length; i++) {
+            const tokens = this.tokenize(this.clean(lines[i]));
+            if (!tokens?.length) continue;
+            let activeMotion;
+            for (let j = 0; j < tokens.length; j++) {
+                const token = tokens[j].toLowerCase();
+                const type = getTokenType(token);
+                switch (type) {
+                    case 'effect':
+                        parsed.push(new GCodeParseStruct(token, i + 1));
+                        break;
+                    case 'arg':
+                        if (activeMotion)
+                            activeMotion.AddArg(token);
+                        else {
+                            activeMotion = new GCodeParseStruct(prevMotionCode, i + 1);
+                            activeMotion.AddArg(token);
+                        }
+                        break;
+                    case 'motion':
+                        if (activeMotion !== undefined)
+                            parsed.push(activeMotion);
+
+                        activeMotion = new GCodeParseStruct(token, i + 1);
+                        prevMotionCode = token;
+                        
+                        break;
+                    default:
+                        break;
                 }
-                
+                const skip = this.skipArgs.find(x => x.code === token);
+                if (skip !== undefined) {
+                    j += skip?.argCount;
+                }
             }
-        });
+            if (activeMotion) parsed.push(activeMotion);
+        }
 
         return parsed;
     }
@@ -73,46 +111,18 @@ class GCodeParser {
     tokenize(line) {
         return line.match(/[a-zA-Z]-?[0-9]*\.?[0-9]+/gi);
     }
-
-    // split line with mutliple codes into separate code/argument lists
-    // (line may contain multiple GCodes w/ args)
-    splitList(tokenList) {
-        const codes = [];
-        for (let i = 0; i < tokenList.length; i++) {
-            // new instruction
-            if (this.gCodes.includes(tokenList[i].toUpperCase())) {
-                // get params
-                let j = i + 1;
-                const args = [];
-                while (tokenList[j] && !this.gCodes.includes(tokenList[j].toUpperCase())) {
-                    args.push(tokenList[j]);
-                    j++;
-                }
-                codes.push([tokenList[i], ...args]);
-                i = j - 1;
-            }
-        }
-        return codes;
-    }
 }
 
 class GCodeParseStruct {
-    constructor(tokens, lineNumber) {
-        if (tokens && tokens.length) {
-            // set gcode and line number
-            this.code = tokens[0];
-            this.line = lineNumber + 1;
-
-            // set args
-            this.args = tokens.slice(1).reduce((obj, arg) => {
-                // get arg name - TODO (maybe): only supports single char arg names
-                const name = arg[0].toUpperCase();
-                // get arg value
-                let value = parseFloat(arg.substring(1));
-                obj[name] = value;
-                return obj;
-            }, {});
-        }
+    constructor(code, lineNumber) {
+        this.code = code;
+        this.line = lineNumber;
+        this.args = {};
+    }
+    AddArg(arg) {
+        const name = arg[0].toLowerCase();
+        const value = parseFloat(arg.substring(1));
+        this.args[name] = value;
     }
 }
 

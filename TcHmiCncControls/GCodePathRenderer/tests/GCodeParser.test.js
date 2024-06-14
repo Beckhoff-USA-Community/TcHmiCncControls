@@ -44,16 +44,16 @@ X-2.184 Z-1.702 A0.0
 `;
 
 const expectedmodal = [
-    { code: 'G0', line: 2, args: { X: -3.184, Z: 2.0, A: 0.0 } },
-    { code: 'G1', line: 3, args: { X: -3.184, Z: -2.0, A: 0.0, F: 225 } },
-    { code: 'G1', line: 5, args: { X: -3.184, Z: -0.978, A: 0.0 } },
-    { code: 'G1', line: 6, args: { X: -2.184, Z: -0.978, A: 0.0 } },
-    { code: 'G1', line: 7, args: { X: -2.184, Z: -1.702, A: 0.0 } }
+    { code: 'g0', line: 2, args: { x: -3.184, z: 2.0, a: 0.0 } },
+    { code: 'g1', line: 3, args: { x: -3.184, z: -2.0, a: 0.0 } },
+    { code: 'g21', line: 4, args: {} },
+    { code: 'g1', line: 5, args: { x: -3.184, z: -0.978, a: 0.0 } },
+    { code: 'g1', line: 6, args: { x: -2.184, z: -0.978, a: 0.0 } },
+    { code: 'g1', line: 7, args: { x: -2.184, z: -1.702, a: 0.0 } }
 ];
 
 test("GCodeParser.parse() parses modal codes properly", () => {
     const res = parser.Parse(gcodemodal);
-    console.log(res);
     expect(parser.Parse(gcodemodal)).toEqual(expectedmodal);
 });
 
@@ -62,20 +62,20 @@ gcodefull = `
 N100 G70
 N101 G90 G17 G161
 N102 (M50) (ALL JET ON)
-N103 G0 X1.42 Y1.62 Z0.25 F500
-N104 G1 X1.3225 Y1.6231 Z0 F4.97 G91 G28 X0 Y0 ; multi-code line
+N103 G4 X100 G0 X1.42 Y1.62 Z0.25 F500
+N104 G1 X1.3225 Y1.6231 Z0 F4.97 G91 G28 Z0 ; multi-code line
 N105 G2 G193 X1.336982 Y2.749007 I1.254028 J2.541072 A-12.361 C101.388 Z0 F6.12
 `;
 
 const expectedfull = [
-    { code: 'G70', line: 2, args: {} },
-    { code: 'G90', line: 3, args: {} },
-    { code: 'G17', line: 3, args: { G: 161 } },
-    { code: 'G0', line: 5, args: { X: 1.42, Y: 1.62, Z: 0.25, F: 500 } },
-    { code: 'G1', line: 6, args: { X: 1.3225, Y: 1.6231, Z: 0, F: 4.97 } },
-    { code: 'G91', line: 6, args: {} },
-    { code: 'G28', line: 6, args: { X: 0, Y: 0 } },
-    { code: 'G2', line: 7, args: { G: 193, X: 1.336982, Y: 2.749007, I: 1.254028, J: 2.541072, A: -12.361, C: 101.388, Z:0, F: 6.12 } }
+    { code: 'g70', line: 2, args: {} },
+    { code: 'g90', line: 3, args: {} },
+    { code: 'g17', line: 3, args: {} },
+    { code: 'g0', line: 5, args: { x: 1.42, y: 1.62, z: 0.25 } },
+    { code: 'g91', line: 6, args: {} },
+    { code: 'g1', line: 6, args: { x: 1.3225, y: 1.6231, z: 0 } },
+    { code: 'g28', line: 6, args: { z: 0 } },
+    { code: 'g2', line: 7, args: { x: 1.336982, y: 2.749007, i: 1.254028, j: 2.541072, a: -12.361, c: 101.388, z:0 } }
 ];
 
 test("GCodeParser.parse() returns the correct object array", () => {
