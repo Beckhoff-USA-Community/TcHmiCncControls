@@ -365,3 +365,4 @@ FodyWeavers.xsd
 # test solution, project files
 CncView_Test/
 CncView_Test.sln
+json-schema.org/
