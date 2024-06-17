@@ -11,10 +11,6 @@ Global
 		Release|TwinCAT HMI = Release|TwinCAT HMI
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{9D17E455-CD7C-48FA-B307-D05405E52EA9}.Debug|TwinCAT HMI.ActiveCfg = Debug|TwinCAT HMI
-		{9D17E455-CD7C-48FA-B307-D05405E52EA9}.Debug|TwinCAT HMI.Build.0 = Debug|TwinCAT HMI
-		{9D17E455-CD7C-48FA-B307-D05405E52EA9}.Release|TwinCAT HMI.ActiveCfg = Release|TwinCAT HMI
-		{9D17E455-CD7C-48FA-B307-D05405E52EA9}.Release|TwinCAT HMI.Build.0 = Release|TwinCAT HMI
 		{183F8F26-ECA7-4A57-8F67-CE529A299577}.Debug|TwinCAT HMI.ActiveCfg = Debug|TwinCAT HMI
 		{183F8F26-ECA7-4A57-8F67-CE529A299577}.Debug|TwinCAT HMI.Build.0 = Debug|TwinCAT HMI
 		{183F8F26-ECA7-4A57-8F67-CE529A299577}.Release|TwinCAT HMI.ActiveCfg = Release|TwinCAT HMI
