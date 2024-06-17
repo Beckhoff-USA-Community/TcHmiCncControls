@@ -361,3 +361,7 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# test solution, project files
+CncView_Test/
+CncView_Test.sln
