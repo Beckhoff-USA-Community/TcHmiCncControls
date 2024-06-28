@@ -1,6 +1,15 @@
 // Keep these lines for a best effort IntelliSense of Visual Studio 2017 and higher.
 /// <reference path="./../../../Packages/Beckhoff.TwinCAT.HMI.Framework.12.760.59/runtimes/native1.12-tchmi/TcHmi.d.ts" />
 
+
+class GCodeTracedPath {
+    constructor(code, id, points) {
+        this.code = code;
+        this.id = id;
+        this.points = points;
+    }
+}
+
 class GCodePathInterpreter {
 
     constructor(config) {
@@ -11,22 +20,24 @@ class GCodePathInterpreter {
         this.MAX_ARC_POINTS = config.maxArcRenderingPoints || 32;
     }
 
-    // creates a path from
-    // parsed GCode object array
+    // takes raw gcode string
+    // parses and traces points for rendering
+    // returns array of GCodeTracedPath
     Trace(gcode) {
 
         // parse
         const parser = new GCodeParser();
-        const parsed = parser.Parse(gcode);
-        
-        // reduce into { code: **, id: #, points: [] } object array
-        const parent = this;
-        const points = parsed.reduce((arr, g) => {
+        const parsedLines = parser.Parse(gcode);
+
+        const fns = this;
+        // trace paths
+        const points = parsedLines.reduce((arr, g) => {
             const code = g.code.toLowerCase();
-            if (parent[code]) {
-                const path = parent[code](g.args);
+            if (fns[code]) {
+                // call code function
+                const path = fns[code](g.args);
                 if (path)
-                    arr.push({ code: code, id: g.line, points: path });
+                    arr.push(new GCodeTracedPath(code, g.line, path));
             }
             return arr;
         }, []);
@@ -34,8 +45,7 @@ class GCodePathInterpreter {
         return points;
     }
 
-    // parse args and scale units
-    // TODO: implement relative positioning
+    // processes code arguments, applies unit scaling and relative positioning
     getScaledPoint(args) {
         let ret = {};
 
@@ -115,14 +125,19 @@ class GCodePathInterpreter {
     g17(args) { }
     g28(args) { }
 
-    // 1-to-1 mm units in rendering
+    // 1-to-1 inch units in rendering
+    // CNC machines use 70 (inch) & 71 (mm) for units
     g70(args) { this.multiplier = 1.0 }
-    g71(args) { this.multiplier = 1.0 }
+    g71(args) { this.multiplier = 1.0 / 25.4 }
+
+    // 3D printers use 20/21 codes for units
+    g20(args) { this.multiplier = 1.0 }
+    g21(args) { this.multiplier = 1.0 / 25.4 }
 
     g90(args) { this.relative = false }
     g91(args) { this.relative = true }
 
-
+    // calculate center point for radius arcs (2D only)
     calculateCenterPoint(start, end, clockwise) {
 
         const midpoint = {
@@ -141,29 +156,30 @@ class GCodePathInterpreter {
         };
     }
 
+    // Generate points along an arc given start, end, center points
     // algorithm reference:
     // https://github.com/NCalu/NCneticNpp/blob/main/NCneticCore/FAO.cs#L101
-    calculateArcPoints(startPoint, endPoint, center, clockwise) {
+    calculateArcPoints(startPoint, endPoint, centerPoint, clockwise) {
 
-        let centerPoint = {};
+        let center = {};
         if (this.ijkRelative)
-            centerPoint = { x: center.x + startPoint.x, y: center.y + startPoint.y, z: center.z + startPoint.z };
+            center = { x: centerPoint.x + startPoint.x, y: centerPoint.y + startPoint.y, z: centerPoint.z + startPoint.z };
         else
-            centerPoint = center;
+            center = centerPoint;
 
-        const m = this.VectorHelpers;
+        const m = this.MathHelpers;
         let points = [];
 
-        let v0 = m.Vector(centerPoint, startPoint);
-        let v1 = m.Vector(centerPoint, endPoint);
+        let v0 = m.Vector(center, startPoint);
+        let v1 = m.Vector(center, endPoint);
         let v2 = m.VectorCrossProduct(v0, v1);
 
         // TODO: XZ / YZ working planes
         // XY plane
         if (true) {
-            v0 = m.Vector({ x: centerPoint.x, y: centerPoint.y, z: startPoint.z }, startPoint);
+            v0 = m.Vector({ x: center.x, y: center.y, z: startPoint.z }, startPoint);
             v1 = m.Vector(
-                { x: centerPoint.x, y: centerPoint.y, z: startPoint.z },
+                { x: center.x, y: center.y, z: startPoint.z },
                 { x: endPoint.x, y: endPoint.y, z: startPoint.z }
             );
             v2 = m.VectorCrossProduct(v0, v1);
@@ -253,8 +269,8 @@ class GCodePathInterpreter {
         return points;
     }
 
-    // Vector and matrix helper functions
-    VectorHelpers = {
+    // Vector and matrix math helper functions
+    MathHelpers = {
         Vector: function(p0, p1) {
             return { x: p1.x - p0.x, y: p1.y - p0.y, z: p1.z - p0.z };
         },

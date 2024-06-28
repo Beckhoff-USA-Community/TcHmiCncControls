@@ -19,7 +19,7 @@
     <ProjectName>TcHmiCncControls</ProjectName>
     <Name>TcHmiCncControls</Name>
     <HmiInitial>1.12.760.59</HmiInitial>
-    <HmiRecent>1.12.760.59</HmiRecent>
+    <HmiRecent>14.1.345.1</HmiRecent>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|TwinCAT HMI' ">
     <PlatformTarget>TwinCAT HMI</PlatformTarget>
@@ -216,6 +216,18 @@
 			BaseClean
 		</CleanDependsOn>
   </PropertyGroup>
+  <PropertyGroup>
+    <_TcHmiNodeJsMode>Global</_TcHmiNodeJsMode>
+    <_TcHmiNodeJsMode Condition="'$(_TcHmiNodeJsMode)' == ''">Global</_TcHmiNodeJsMode>
+    <_TcHmiNodePath Condition="'$(_TcHmiNodeJsMode)' == 'Global'">$(registry:HKEY_LOCAL_MACHINE\SOFTWARE\Node.js@InstallPath)</_TcHmiNodePath>
+    <_TcHmiNodePath Condition="'$(_TcHmiNodeJsMode)' == 'Global' AND '$(_TcHmiNodePath)' == '' AND Exists('C:\Program Files\nodejs\')">C:\Program Files\nodejs\</_TcHmiNodePath>
+    <_TcHmiNodePath Condition="'$(_TcHmiNodeJsMode)' == 'Global' AND '$(_TcHmiNodePath)' == '' AND Exists('C:\Program Files (x86)\nodejs\')">C:\Program Files (x86)\nodejs\</_TcHmiNodePath>
+  </PropertyGroup>
+  <Target Name="ReTargetNodePath" Condition="'$(_TcHmiNodePath)' != ''" BeforeTargets="$(CompileDependsOn)">
+    <PropertyGroup>
+      <NodePath>$(_TcHmiNodePath)</NodePath>
+    </PropertyGroup>
+  </Target>
   <Target Name="CoreBuild">
   </Target>
   <Target Name="Build" DependsOnTargets="$(BuiltProjectOutputGroupDependsOn)" />

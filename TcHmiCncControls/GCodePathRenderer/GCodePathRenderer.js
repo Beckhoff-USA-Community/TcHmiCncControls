@@ -255,9 +255,10 @@ var TcHmi;
                 }
 
                 __renderPath(gcode) {
-                    
-                    // trace path
+
                     this.__initScene();
+
+                    // trace path
                     const interpreter = new GCodePathInterpreter(this.__cncConfig);
                     const paths = interpreter.Trace(gcode);
 
@@ -398,6 +399,7 @@ var TcHmi;
                     this.__updateTooling(this.__toolingPos);
                 }
 
+                // facilitates binding object property members
                 __resolveObjectProperty(propertyName, value, processFn) {
 
                     // get state references
@@ -424,7 +426,7 @@ var TcHmi;
                         watchDestroyer: resolver.watch(callbackFn)
                     });
 
-                    // callback fn
+                    // object resolver callback
                     function callbackFn(data) {
                         if (parent.__isAttached === false) { // While not attached attribute should only be processed once during initializing phase.
                             parent.__suspendObjectResolver(propertyName);
