@@ -153,7 +153,6 @@
       <DependentUpon>tsconfig.tpl.json</DependentUpon>
     </Content>
     <HmiManifest Include="Manifest.json" />
-    <Content Include="LICENSE.txt" />
     <Content Include="Images\logo.png" />
     <Content Include="TcHmiCncControls.nuspec" />
     <Content Include=".tfignore">
