@@ -12,3 +12,7 @@ A simple utilization of the [ace editor](https://github.com/ajaxorg/ace) configu
 #### [GCode Path Renderer](/TcHmiCncControls/GCodePathRenderer/)
 
 A GCode parser and interpreter, along with a 3D rendering environment using the [BabylonJS](https://github.com/BabylonJS/Babylon.js) engine. This control is intended to provide a 3D tool path visualization of the supplied GCode string.
+
+---
+
+### [License](/TcHmiCncControls/LICENSE.txt)
