@@ -26,19 +26,22 @@ to
 ### Quick Start
 
 1. Add reference (Either as a [package](/release/) or as a project reference)
-![nuget reference](./media/img_references.png "References")
+
+<img src="./media/img_references.png" width=720px />
+
 2. Drop controls on page
 3. Call the `SetPath` method of the Renderer with the Editor's `Content` property as input
-![setpath](./media/img_setpath.png "Set Path")
+
+<img src="./media/img_setpath.png" width=720px />
 
 The control is also able to render the path progress based on the selected line in the editor. It also supports click events on the rendering itself to take you to the GCode line in the editor:
 1. Enable the `Render Progress` property of the Renderer
-![renderprogress](./media/img_renderprogress.png "Set Path")
+
+<img src="./media/img_renderprogress.png" />
+
 2. Bind the Renderer's `Selected Mesh` property to the Editor's `Selected Line` property
 3. Bind the Editor's `Selected Line` property to the Renderer's `Selected Mesh` property
 
-![beckhofflogo](./media/img_beckhoff.gif "Beckhoff Logo render")
-
-
+<img src="./media/img_beckhoff.gif" />
 
 ### [License](/TcHmiCncControls/LICENSE.txt)
