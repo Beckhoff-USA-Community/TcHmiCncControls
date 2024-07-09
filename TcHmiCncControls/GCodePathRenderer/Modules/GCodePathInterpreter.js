@@ -17,7 +17,7 @@ class GCodePathInterpreter {
         this.relative = false;
         this.prevPoint = { x: 0, y: 0, z: 0, i: 0, j: 0, k: 0 };
         this.ijkRelative = config.ijkRelative;
-        this.MAX_ARC_POINTS = config.maxArcRenderingPoints || 32;
+        this.maxArcPoints = config.maxArcRenderingPoints || 32;
     }
 
     // takes raw gcode string
@@ -54,15 +54,15 @@ class GCodePathInterpreter {
         }
 
         ret.x = (args.x !== undefined) ?
-            ((this.relative) ? (args.x + this.prevPoint.x) : args.x) * this.multiplier :
+            ((this.relative) ? ((args.x * this.multiplier) + this.prevPoint.x) : args.x * this.multiplier) :
             this.prevPoint.x;
 
         ret.y = (args.y !== undefined) ?
-            ((this.relative) ? (args.y + this.prevPoint.y) : args.y) * this.multiplier :
+            ((this.relative) ? ((args.y * this.multiplier) + this.prevPoint.y) : args.y * this.multiplier) :
             this.prevPoint.y;
 
         ret.z = (args.z !== undefined) ?
-            ((this.relative) ? (args.z + this.prevPoint.z) : args.z) * this.multiplier :
+            ((this.relative) ? ((args.z * this.multiplier) + this.prevPoint.z) : args.z * this.multiplier) :
             this.prevPoint.z;
 
         ret.i = (args.i !== undefined) ? (args.i * this.multiplier) : this.prevPoint.i;
@@ -246,7 +246,7 @@ class GCodePathInterpreter {
             }
         }
 
-        let da = 2 * Math.PI / this.MAX_ARC_POINTS;
+        let da = 2 * Math.PI / this.maxArcPoints;
         let nseg = parseInt(Math.ceil(Math.abs(a1 - a0) / da));
         let p0 = { x: startPoint.x, y: startPoint.y, z: startPoint.z };
         let invTransform = m.MatrixInverse(transformMatrix);

@@ -158,7 +158,7 @@ var TcHmi;
                     return function (e) {
                         if (!ctrl.__editor) return;
                         // load editor with iframe src content
-                        const content = e.target.contentDocument.body.firstChild.innerHTML;
+                        const content = e.target.contentDocument.body.firstChild.innerText;
                         if (content) {
                             ctrl.__editor.setValue(content);
                             ctrl.__editor.gotoLine(1, 0, false);
