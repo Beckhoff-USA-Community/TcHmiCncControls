@@ -41,6 +41,7 @@ var TcHmi;
                     this.__fontSize = 16;
                     this.__isReadOnly = false;
                     this.__selectedLine = 0;
+                    this.__content = "";
 
                     var guid = tchmi_create_guid();
                     this.__eIframeOnLoad = 'load.' + guid;
@@ -177,7 +178,7 @@ var TcHmi;
                     
                     // set iframe src
                     const full = path + '/' + file;
-                    this.__elementIframe.first().attr('src', full);
+                    this.__elementIframe.first().attr('src', `${full}?nocache=${new Date().getTime()}`);
                 }
 
                 // save current editor content to file
@@ -222,10 +223,12 @@ var TcHmi;
                 }
 
                 getContent() {
-                    return this.__editor?.getValue() || "";
+                    this.__content = this.__editor?.getValue() || "";
+                    return this.__content;
                 }
 
                 setContent(value) {
+                    this.__content = value;
                     this.__editor?.setValue(value);
                 }
 

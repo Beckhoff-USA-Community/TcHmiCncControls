@@ -104,7 +104,7 @@
       "type": "tchmi:general#/definitions/String",
       "defaultValue": "",
       "defaultValueInternal": "",
-      "bindable": false,
+      "bindable": true,
       "description": "Editor content as string"
     },
     {
