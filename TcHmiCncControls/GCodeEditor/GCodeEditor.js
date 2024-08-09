@@ -72,9 +72,13 @@ var TcHmi;
                         this.__editor.on("changeSelection", function () {
                             if (ctrl.__selectedLine !== ctrl.__editor.selection.getRange().start.row) {
                                 ctrl.__selectedLine = ctrl.__editor.selection.getRange().start.row || 0;
-                                TcHmi.EventProvider.raise(`${ctrl.getId()}.onPropertyChanged`, {
-                                    propertyName: "SelectedLine",
-                                });
+                                TcHmi.EventProvider.raise(`${ctrl.getId()}.onPropertyChanged`, { propertyName: "SelectedLine" });
+                            }
+                        });
+
+                        this.__editor.session.on("change", function (delta) {
+                            if (delta.start.row !== delta.end.row && delta.id) {
+                                TcHmi.EventProvider.raise(`${ctrl.getId()}.onPropertyChanged`, { propertyName: "Content" });
                             }
                         });
                     }
@@ -123,6 +127,7 @@ var TcHmi;
                     this.__elementIframe.off(this.__eIframeOnLoad);
                     this.__onThemeChange();
                     this.__editor.off("changeSelection");
+                    this.__editor.session.off("change");
                 }
                 /**
                  * Destroy the current control instance.
