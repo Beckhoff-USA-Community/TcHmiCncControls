@@ -30,9 +30,10 @@ class GCodePathInterpreter {
         const parsedLines = parser.Parse(gcode);
 
         const fns = this;
+
         // trace paths
         const points = parsedLines.reduce((arr, g) => {
-            const code = g.code.toLowerCase();
+            const code = g.code?.toLowerCase();
             if (fns[code]) {
                 // call code function
                 const path = fns[code](g.args);
@@ -91,9 +92,7 @@ class GCodePathInterpreter {
     g2(args) { return this.g02(args) }
     g02(args) {
         const dest = this.getScaledPoint(args);
-        const center = (dest.r) ?
-            this.calculateCenterPoint(this.prevPoint, dest, true) :
-            { x: dest.i, y: dest.j, z: dest.k };
+        const center = this.calculateCenterPoint(this.prevPoint, dest, true);
         const points = this.calculateArcPoints(
             this.prevPoint,
             dest,
@@ -108,9 +107,7 @@ class GCodePathInterpreter {
     g3(args) { return this.g03(args) }
     g03(args) {
         const dest = this.getScaledPoint(args);
-        const center = (dest.r) ?
-            this.calculateCenterPoint(this.prevPoint, dest, false) :
-            { x: dest.i, y: dest.j, z: dest.k };
+        const center = this.calculateCenterPoint(this.prevPoint, dest, false);
         const points = this.calculateArcPoints(
             this.prevPoint,
             dest,
@@ -140,20 +137,29 @@ class GCodePathInterpreter {
     // calculate center point for radius arcs (2D only)
     calculateCenterPoint(start, end, clockwise) {
 
-        const midpoint = {
-            x: (start.x + end.x) / 2,
-            y: (start.y + end.y) / 2
-        };
+        if (end.r) {
+            const midpoint = {
+                x: (start.x + end.x) / 2,
+                y: (start.y + end.y) / 2
+            };
 
-        const halfLength = Math.sqrt(Math.pow(midpoint.x - end.x, 2) + Math.pow(midpoint.y - end.y, 2));
-        const distanceToCenter = Math.sqrt(Math.pow(end.r, 2) - Math.pow(halfLength, 2));
-        const angle = Math.atan2(end.y - start.y, end.x - start.x) + (clockwise ? -Math.PI / 2 : Math.PI / 2);
+            const halfLength = Math.sqrt(Math.pow(midpoint.x - end.x, 2) + Math.pow(midpoint.y - end.y, 2));
+            const distanceToCenter = Math.sqrt(Math.pow(end.r, 2) - Math.pow(halfLength, 2));
+            const angle = Math.atan2(end.y - start.y, end.x - start.x) + (clockwise ? -Math.PI / 2 : Math.PI / 2);
 
-        return {
-            x: midpoint.x + (distanceToCenter || 0) * Math.cos(angle),
-            y: midpoint.y + (distanceToCenter || 0) * Math.sin(angle),
-            z: start.z
-        };
+            return {
+                x: midpoint.x + (distanceToCenter || 0) * Math.cos(angle),
+                y: midpoint.y + (distanceToCenter || 0) * Math.sin(angle),
+                z: start.z
+            };
+        } else {
+            if (this.ijkRelative) {
+                return { x: start.x + end.i, y: start.y + end.j, z: start.z + end.k };
+            } else {
+                return { x: end.i, y: end.j, z: end.k };
+            }
+        }
+        
     }
 
     // Generate points along an arc given start, end, center points
@@ -161,25 +167,19 @@ class GCodePathInterpreter {
     // https://github.com/NCalu/NCneticNpp/blob/main/NCneticCore/FAO.cs#L101
     calculateArcPoints(startPoint, endPoint, centerPoint, clockwise) {
 
-        let center = {};
-        if (this.ijkRelative)
-            center = { x: centerPoint.x + startPoint.x, y: centerPoint.y + startPoint.y, z: centerPoint.z + startPoint.z };
-        else
-            center = centerPoint;
-
         const m = this.MathHelpers;
         let points = [];
 
-        let v0 = m.Vector(center, startPoint);
-        let v1 = m.Vector(center, endPoint);
+        let v0 = m.Vector(centerPoint, startPoint);
+        let v1 = m.Vector(centerPoint, endPoint);
         let v2 = m.VectorCrossProduct(v0, v1);
 
         // TODO: XZ / YZ working planes
         // XY plane
         if (true) {
-            v0 = m.Vector({ x: center.x, y: center.y, z: startPoint.z }, startPoint);
+            v0 = m.Vector({ x: centerPoint.x, y: centerPoint.y, z: startPoint.z }, startPoint);
             v1 = m.Vector(
-                { x: center.x, y: center.y, z: startPoint.z },
+                { x: centerPoint.x, y: centerPoint.y, z: startPoint.z },
                 { x: endPoint.x, y: endPoint.y, z: startPoint.z }
             );
             v2 = m.VectorCrossProduct(v0, v1);
