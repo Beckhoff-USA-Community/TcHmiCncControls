@@ -96,6 +96,9 @@ var TcHmi;
                         const engine = this.__engine;
                         const scene = new BABYLON.Scene(engine);
 
+                        // right-hand coordinate system
+                        scene.useRightHandedSystem = true;
+
                         // init camera
                         const camera = new BABYLON.ArcRotateCamera(
                             "camera0", Math.PI / 2, Math.PI / 2, 7, BABYLON.Vector3.Zero(), scene);
