@@ -48,30 +48,37 @@ class GCodePathInterpreter {
 
     // processes code arguments, applies unit scaling and relative positioning
     getScaledPoint(args) {
-        let ret = {};
 
         if (args.x === undefined && args.y === undefined && args.z === undefined) {
             return;
         }
 
-        ret.x = (args.x !== undefined) ?
-            ((this.relative) ? ((args.x * this.multiplier) + this.prevPoint.x) : args.x * this.multiplier) :
-            this.prevPoint.x;
+        let x, y, z, i, j, k, r;
 
-        ret.y = (args.y !== undefined) ?
-            ((this.relative) ? ((args.y * this.multiplier) + this.prevPoint.y) : args.y * this.multiplier) :
-            this.prevPoint.y;
+        if (args.x === undefined) {
+            x = this.prevPoint.x;
+        } else {
+            x = this.multiplier * ((this.relative) ? args.x + this.prevPoint.x : args.x);
+        }
 
-        ret.z = (args.z !== undefined) ?
-            ((this.relative) ? ((args.z * this.multiplier) + this.prevPoint.z) : args.z * this.multiplier) :
-            this.prevPoint.z;
+        if (args.y === undefined) {
+            y = this.prevPoint.y;
+        } else {
+            y = this.multiplier * ((this.relative) ? args.y + this.prevPoint.y : args.y);
+        }
 
-        ret.i = (args.i !== undefined) ? (args.i * this.multiplier) : this.prevPoint.i;
-        ret.j = (args.j !== undefined) ? (args.j * this.multiplier) : this.prevPoint.j;
-        ret.k = (args.k !== undefined) ? (args.k * this.multiplier) : this.prevPoint.k;
-        ret.r = (args.r !== undefined) ? args.r : undefined;
+        if (args.z === undefined) {
+            z = this.prevPoint.z;
+        } else {
+            z = this.multiplier * ((this.relative) ? args.z + this.prevPoint.z : args.z);
+        }
 
-        return ret;
+        i = (args.i !== undefined) ? (args.i * this.multiplier) : this.prevPoint.i;
+        j = (args.j !== undefined) ? (args.j * this.multiplier) : this.prevPoint.j;
+        k = (args.k !== undefined) ? (args.k * this.multiplier) : this.prevPoint.k;
+        r = (args.r !== undefined) ? args.r : undefined;
+
+        return { x: x, y: y, z: z, i: i, j: j, k: k, r: r };
     }
 
     g0(args) { return this.g00(args) }

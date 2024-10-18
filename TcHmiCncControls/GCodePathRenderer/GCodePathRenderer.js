@@ -34,6 +34,7 @@ var TcHmi;
                     this.__pathString = "";
                     this.__selectedMeshId = 0;
                     this.__renderProgress = false;
+                    this.__hideG0Lines = false;
                     this.__cncConfig = {
                         ijkRelative: true, maxArcRenderingPoints: 32
                     };
@@ -48,8 +49,15 @@ var TcHmi;
                     this.__toolingPos = {
                         x: 0, y: 0, z: 0, a: 0, b: 0, c: 0
                     };
-                    this.__sceneBgColor = null;
                     this.__selectionZoom = false;
+
+                    this.__sceneBgColor = null;
+                    this.__g00LineColor = null;
+                    this.__g01LineColor = null;
+                    this.__g02LineColor = null;
+                    this.__g03LineColor = null;
+                    this.__traceLineColor = null;
+                    this.__lineColors = {};
                 }
 
                 __previnit() {
@@ -127,9 +135,17 @@ var TcHmi;
 
                         // background color
                         if (this.__sceneBgColor) {
-                            const [r, g, b, a] = this.__sceneBgColor.color.match(/[\d\.]+/g).map(Number);
-                            scene.clearColor = new BABYLON.Color4((r / 255), (g / 255), (b / 255), a);
+                            scene.clearColor = this.__hmiColorToBablyonColor(this.__sceneBgColor);
                         }
+
+                        // line colors
+                        this.__lineColors = {
+                            g00: this.__hmiColorToBablyonColor(this.__g00LineColor) ?? new BABYLON.Color4(0, 0, 1, 1),
+                            g01: this.__hmiColorToBablyonColor(this.__g01LineColor) ?? new BABYLON.Color4(0, 1, 0, 1),
+                            g02: this.__hmiColorToBablyonColor(this.__g02LineColor) ?? new BABYLON.Color4(0, 1, 0, 1),
+                            g03: this.__hmiColorToBablyonColor(this.__g03LineColor) ?? new BABYLON.Color4(0, 1, 0, 1),
+                            trace: this.__hmiColorToBablyonColor(this.__traceLineColor) ?? new BABYLON.Color4(1, 0, 0, 1) 
+                        };
 
                         // mouse events
                         scene.onPointerObservable.add((pointerInfo) => {
@@ -163,6 +179,12 @@ var TcHmi;
                         // update scene reference
                         this.__scene = scene;
                     }
+                }
+
+                __hmiColorToBablyonColor(hmiColor) {
+                    if (hmiColor == null) return;
+                    const [r, g, b, a] = hmiColor.color.match(/[\d\.]+/g).map(Number);
+                    return new BABYLON.Color4((r / 255), (g / 255), (b / 255), a);
                 }
 
                 __handleResize() {
@@ -257,6 +279,7 @@ var TcHmi;
                     camera.angularSensibilityY = (enabled) ? 1000000 : 3000;
                 }
 
+                // main rendering logic
                 __renderPath(gcode) {
 
                     this.__initScene();
@@ -264,6 +287,7 @@ var TcHmi;
                     // trace path
                     const interpreter = new GCodePathInterpreter(this.__cncConfig);
                     const paths = interpreter.Trace(gcode);
+                    const parent = this;
 
                     // generate line and color arrays
                     const lines = [];
@@ -272,15 +296,12 @@ var TcHmi;
                     const faceIdMap = new Map();
                     let faceId = 0;
                     paths.forEach((p, i) => {
+                        if (this.__hideG0Lines && p.code === "g00") return;
                         const l = p.points.map((x, j) => {
                             if (j > 0) faceIdMap.set(faceId++, p.id);
                             return new BABYLON.Vector3(x.x, x.y, x.z)
                         });
-                        const c = p.points.map(x =>
-                            (p.code === 'g0' || p.code === 'g00') ?
-                                new BABYLON.Color4(0, 0, 1, 1) :
-                                new BABYLON.Color4(0, 1, 0, 1)
-                        );
+                        const c = p.points.map(_ => parent.__lineColors[p.code]);
 
                         lines.push(l);
                         colors.push(c);
@@ -329,19 +350,18 @@ var TcHmi;
                 __updateRendering(id) {
 
                     const ld = this.__lineData;
-                    const blue = new BABYLON.Color4(0, 0, 1, 1);
-
                     if (!ld.colors) return;
 
                     // set colors
+                    let traced = [];
                     for (let i = 0; i < ld.colors.length; i++) {
-                        if (ld.colors[i][0].equals(blue)) continue;
+                        traced.push(ld.colors[i].slice());
                         if (ld.ids[i] <= id) {
                             ld.colors[i].forEach((_, j) =>
-                                ld.colors[i][j] = new BABYLON.Color4(1, 0, 0, 1));
+                                traced[i][j] = this.__lineColors.trace);
                         } else {
                             ld.colors[i].forEach((_, j) =>
-                                ld.colors[i][j] = new BABYLON.Color4(0, 1, 0, 1));
+                                traced[i][j] = ld.colors[i][j]);
                         }
                     }
 
@@ -350,7 +370,7 @@ var TcHmi;
                         "lineSystem",
                         {
                             lines: ld.lines,
-                            colors: ld.colors,
+                            colors: traced,
                             instance: ld.lineSystem,
                             updatable: true
                         }
@@ -495,6 +515,14 @@ var TcHmi;
                     this.__renderProgress = value;
                 }
 
+                getHideG0Lines() {
+                    return this.__hideG0Lines;
+                }
+
+                setHideG0Lines(value) {
+                    this.__hideG0Lines = value;
+                }
+
                 getSelectionZoom() {
                     return this.__selectionZoom;
                 }
@@ -534,6 +562,46 @@ var TcHmi;
 
                 setSceneBgColor(value) {
                     this.__sceneBgColor = value;
+                }
+
+                getG00LineColor() {
+                    return this.__g00LineColor;
+                }
+
+                setG00LineColor(value) {
+                    this.__g00LineColor = value;
+                }
+
+                getG01LineColor() {
+                    return this.__g01LineColor;
+                }
+
+                setG01LineColor(value) {
+                    this.__g01LineColor = value;
+                }
+
+                getG02LineColor() {
+                    return this.__g02LineColor;
+                }
+
+                setG02LineColor(value) {
+                    this.__g02LineColor = value;
+                }
+
+                getG03LineColor() {
+                    return this.__g03LineColor;
+                }
+
+                setG03LineColor(value) {
+                    this.__g03LineColor = value;
+                }
+
+                getTraceLineColor() {
+                    return this.__traceLineColor;
+                }
+
+                setTraceLineColor(value) {
+                    this.__traceLineColor = value;
                 }
             }
             TcHmiCncControls.GCodePathRenderer = GCodePathRenderer;

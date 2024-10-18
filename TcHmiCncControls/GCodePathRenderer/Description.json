@@ -107,6 +107,20 @@
       "description": "Gets or sets rendering based on selected segment mesh Id."
     },
     {
+      "displayName": "Hide G00 Moves",
+      "name": "data-tchmi-hide-g0Lines",
+      "propertyGetterName": "getHideG0Lines",
+      "propertySetterName": "setHideG0Lines",
+      "propertyName": "hideG0Lines",
+      "type": "tchmi:general#/definitions/Boolean",
+      "category": "Common",
+      "bindable": true,
+      "visible": true,
+      "defaultValue": false,
+      "defaultValueInternal": false,
+      "description": "Hides G00 Path Lines."
+    },
+    {
       "displayName": "Selection Zoom",
       "name": "data-tchmi-selection-zoom",
       "propertyGetterName": "getSelectionZoom",
@@ -165,7 +179,7 @@
       "allowSymbolExpressionsInObject": true
     },
     {
-      "displayName": "SceneBackgroundColor",
+      "displayName": "Scene Background Color",
       "name": "data-tchmi-scene-bgcolor",
       "propertyGetterName": "getSceneBgColor",
       "propertySetterName": "setSceneBgColor",
@@ -175,6 +189,66 @@
       "defaultValue": null,
       "defaultValueInternal": null,
       "description": "Rendering scene background color."
+    },
+    {
+      "displayName": "G00 Line Color",
+      "name": "data-tchmi-g00line-color",
+      "propertyGetterName": "getG00LineColor",
+      "propertySetterName": "setG00LineColor",
+      "propertyName": "g00LineColor",
+      "type": "tchmi:framework#/definitions/SolidColor",
+      "category": "Colors",
+      "defaultValue": null,
+      "defaultValueInternal": null,
+      "description": "G00 Line Color."
+    },
+    {
+      "displayName": "G01 Line Color",
+      "name": "data-tchmi-g01line-color",
+      "propertyGetterName": "getG01LineColor",
+      "propertySetterName": "setG01LineColor",
+      "propertyName": "g01LineColor",
+      "type": "tchmi:framework#/definitions/SolidColor",
+      "category": "Colors",
+      "defaultValue": null,
+      "defaultValueInternal": null,
+      "description": "G01 Line Color."
+    },
+    {
+      "displayName": "G02 Line Color",
+      "name": "data-tchmi-g02line-color",
+      "propertyGetterName": "getG02LineColor",
+      "propertySetterName": "setG02LineColor",
+      "propertyName": "g02LineColor",
+      "type": "tchmi:framework#/definitions/SolidColor",
+      "category": "Colors",
+      "defaultValue": null,
+      "defaultValueInternal": null,
+      "description": "G02 Line Color."
+    },
+    {
+      "displayName": "G03 Line Color",
+      "name": "data-tchmi-g03line-color",
+      "propertyGetterName": "getG03LineColor",
+      "propertySetterName": "setG03LineColor",
+      "propertyName": "g03LineColor",
+      "type": "tchmi:framework#/definitions/SolidColor",
+      "category": "Colors",
+      "defaultValue": null,
+      "defaultValueInternal": null,
+      "description": "G03 Line Color."
+    },
+    {
+      "displayName": "Trace Line Color",
+      "name": "data-tchmi-traceline-color",
+      "propertyGetterName": "getTraceLineColor",
+      "propertySetterName": "setTraceLineColor",
+      "propertyName": "traceLineColor",
+      "type": "tchmi:framework#/definitions/SolidColor",
+      "category": "Colors",
+      "defaultValue": null,
+      "defaultValueInternal": null,
+      "description": "Trace (Progress) Line Color."
     }
   ],
   "attributeCategories": [

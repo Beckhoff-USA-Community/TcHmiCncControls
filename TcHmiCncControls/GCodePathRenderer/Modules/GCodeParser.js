@@ -3,9 +3,20 @@
 
 class GCodeParsedLine {
     constructor(code, lineNumber) {
-        this.code = code;
+        this.code = this.NormalizeMotionCode(code);
         this.line = lineNumber;
         this.args = {};
+    }
+    NormalizeMotionCode(code) {
+        if (code === "g0") 
+            return "g00";
+        else if (code === "g1")
+            return "g01";
+        else if (code === "g2")
+            return "g02";
+        else if (code === "g3")
+            return "g03";
+        else return code;
     }
     AddArg(arg) {
         const name = arg[0].toLowerCase();

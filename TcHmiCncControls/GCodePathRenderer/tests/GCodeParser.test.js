@@ -44,12 +44,12 @@ X-2.184 Z-1.702 A0.0
 `;
 
 const expectedmodal = [
-    { code: 'g0', line: 2, args: { x: -3.184, z: 2.0, a: 0.0 } },
-    { code: 'g1', line: 3, args: { x: -3.184, z: -2.0, a: 0.0 } },
+    { code: 'g00', line: 2, args: { x: -3.184, z: 2.0, a: 0.0 } },
+    { code: 'g01', line: 3, args: { x: -3.184, z: -2.0, a: 0.0 } },
     { code: 'g21', line: 4, args: {} },
-    { code: 'g1', line: 5, args: { x: -3.184, z: -0.978, a: 0.0 } },
-    { code: 'g1', line: 6, args: { x: -2.184, z: -0.978, a: 0.0 } },
-    { code: 'g1', line: 7, args: { x: -2.184, z: -1.702, a: 0.0 } }
+    { code: 'g01', line: 5, args: { x: -3.184, z: -0.978, a: 0.0 } },
+    { code: 'g01', line: 6, args: { x: -2.184, z: -0.978, a: 0.0 } },
+    { code: 'g01', line: 7, args: { x: -2.184, z: -1.702, a: 0.0 } }
 ];
 
 test("GCodeParser.parse() parses modal codes properly", () => {
@@ -71,11 +71,11 @@ const expectedfull = [
     { code: 'g70', line: 2, args: {} },
     { code: 'g90', line: 3, args: {} },
     { code: 'g17', line: 3, args: {} },
-    { code: 'g0', line: 5, args: { x: 1.42, y: 1.62, z: 0.25 } },
+    { code: 'g00', line: 5, args: { x: 1.42, y: 1.62, z: 0.25 } },
     { code: 'g91', line: 6, args: {} },
-    { code: 'g1', line: 6, args: { x: 1.3225, y: 1.6231, z: 0 } },
+    { code: 'g01', line: 6, args: { x: 1.3225, y: 1.6231, z: 0 } },
     { code: 'g28', line: 6, args: { z: 0 } },
-    { code: 'g2', line: 7, args: { x: 1.336982, y: 2.749007, i: 1.254028, j: 2.541072, a: -12.361, c: 101.388, z:0 } }
+    { code: 'g02', line: 7, args: { x: 1.336982, y: 2.749007, i: 1.254028, j: 2.541072, a: -12.361, c: 101.388, z:0 } }
 ];
 
 test("GCodeParser.parse() returns the correct object array", () => {
