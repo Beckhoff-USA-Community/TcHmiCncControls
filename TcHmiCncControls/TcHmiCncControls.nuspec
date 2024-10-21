@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
   <metadata>
     <id>TcHmiCncControls</id>
-    <version>0.0.8</version>
+    <version>0.0.9</version>
     <description>-.-</description>
     <authors>Beckhoff Automation USA</authors>
     <title>TcHmiCncControls</title>
