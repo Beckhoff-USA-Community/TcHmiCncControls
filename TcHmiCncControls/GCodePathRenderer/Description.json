@@ -47,6 +47,11 @@
       "description": "Babylon.js library"
     },
     {
+      "name": "lib/babylonjs/babylonjs.loaders.min.js",
+      "type": "JavaScript",
+      "description": "Babylon.js loaders"
+    },
+    {
       "name": "Modules/GCodeParser.js",
       "type": "JavaScript",
       "description": "GCode parsing module"
@@ -164,18 +169,18 @@
       "allowSymbolExpressionsInObject": true
     },
     {
-      "displayName": "Tooling Position",
-      "name": "data-tchmi-tooling-position",
-      "propertyGetterName": "getToolingPosition",
-      "propertySetterName": "setToolingPosition",
-      "propertyName": "toolingPosition",
-      "type": "tchmi:framework#/definitions/ToolPosition",
+      "displayName": "Tooling Dynamics",
+      "name": "data-tchmi-tooling-dynamics",
+      "propertyGetterName": "getToolingDynamics",
+      "propertySetterName": "setToolingDynamics",
+      "propertyName": "toolingDynamics",
+      "type": "tchmi:framework#/definitions/ToolingDynamics",
       "category": "Tooling",
       "bindable": true,
       "visible": true,
       "defaultValue": {},
       "defaultValueInternal": {},
-      "description": "Real time tooling position.",
+      "description": "Real time tooling position and rotation.",
       "allowSymbolExpressionsInObject": true
     },
     {

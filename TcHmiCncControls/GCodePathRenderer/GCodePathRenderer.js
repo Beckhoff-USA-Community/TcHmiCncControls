@@ -40,15 +40,28 @@ var TcHmi;
                     };
                     this.__toolingConfig = {
                         showTooling: true,
-                        positionOffset: {
-                            x: 0, y: 0, z: 0, a: 0, b: 0, c: 0
-                        },
+                        modelPath: null,
                         rotationUnit: "Degrees",
+                        positionOffset: {
+                            x: 0, y: 0, z: 0
+                        },
+                        rotationOffset: {
+                            x: 0, y: 0, z: 0
+                        },
+                        scaling: {
+                            x: 1.0, y: 1.0, z: 1.0
+                        },
                         cameraFollow: false
                     };
-                    this.__toolingPos = {
-                        x: 0, y: 0, z: 0, a: 0, b: 0, c: 0
+                    this.__toolingDynamics = {
+                        position: {
+                            x: 0, y: 0, z: 0
+                        },
+                        rotation: {
+                            x: 0, y: 0, z: 0
+                        }
                     };
+                    this.__loadingTool = false;
                     this.__selectionZoom = false;
 
                     this.__sceneBgColor = null;
@@ -103,6 +116,7 @@ var TcHmi;
                         // generate scene
                         const engine = this.__engine;
                         const scene = new BABYLON.Scene(engine);
+                        this.__scene = scene;
 
                         // right-hand coordinate system
                         scene.useRightHandedSystem = true;
@@ -176,8 +190,9 @@ var TcHmi;
                             }
                         });
 
-                        // update scene reference
-                        this.__scene = scene;
+                        // load tooling
+                        if (this.__toolingConfig.showTooling)
+                            this.__loadToolingModel(this.__toolingConfig);
                     }
                 }
 
@@ -378,38 +393,28 @@ var TcHmi;
                 }
 
                 // update tooling
-                __updateTooling(pos) {
+                __updateTooling(dynamics) {
 
-                    if (!this.__scene)
+                    if (!this.__scene || this.__loadingTool)
                         return;
 
-                    this.__toolingPos = pos;
                     let mesh = this.__scene.getMeshByName("tool");
+                    if (!mesh) return;
 
-                    if (!this.__toolingConfig.showTooling) {
-                        // remove mesh
-                        mesh?.dispose();
-                        return;
-                    }
+                    this.__toolingDynamics = dynamics;
 
-                    if (!mesh)
-                        mesh = BABYLON.MeshBuilder.CreateCylinder("tool", { diameter: 0.1, height: 0.5 });
-
-                    mesh.position.x = this.__toolingConfig.positionOffset.x + pos.x;
-                    mesh.position.y = this.__toolingConfig.positionOffset.y + pos.y;
-                    mesh.position.z = this.__toolingConfig.positionOffset.z + pos.z;
+                    mesh.position.x = this.__toolingConfig.positionOffset.x + parseFloat(dynamics.position.x);
+                    mesh.position.y = this.__toolingConfig.positionOffset.y + parseFloat(dynamics.position.y);
+                    mesh.position.z = this.__toolingConfig.positionOffset.z + parseFloat(dynamics.position.z);
 
                     // abc rotation
+                    const mult = (this.__toolingConfig.rotationUnit === "Degrees") ? Math.PI / 180 : 1;
                     mesh.rotation = BABYLON.Vector3.Zero();
-                    if (this.__toolingConfig.rotationUnit === "Degrees") {
-                        mesh.rotate(BABYLON.Axis.X, (this.__toolingConfig.positionOffset.a + pos.a) * Math.PI / 180, BABYLON.Space.WORLD);
-                        mesh.rotate(BABYLON.Axis.Y, (this.__toolingConfig.positionOffset.b + pos.b) * Math.PI / 180, BABYLON.Space.WORLD);
-                        mesh.rotate(BABYLON.Axis.Z, (this.__toolingConfig.positionOffset.c + pos.c) * Math.PI / 180, BABYLON.Space.WORLD);
-                    } else {
-                        mesh.rotate(BABYLON.Axis.X, this.__toolingConfig.positionOffset.a + pos.a, BABYLON.Space.WORLD);
-                        mesh.rotate(BABYLON.Axis.Y, this.__toolingConfig.positionOffset.b + pos.b, BABYLON.Space.WORLD);
-                        mesh.rotate(BABYLON.Axis.Z, this.__toolingConfig.positionOffset.c + pos.c, BABYLON.Space.WORLD);
-                    }
+                    mesh.rotation = new BABYLON.Vector3(
+                        (parseFloat(dynamics.rotation.x) + this.__toolingConfig.rotationOffset.x) * mult,
+                        (parseFloat(dynamics.rotation.y) + this.__toolingConfig.rotationOffset.y) * mult,
+                        (parseFloat(dynamics.rotation.z) + this.__toolingConfig.rotationOffset.z) * mult
+                    );
 
                     if (this.__toolingConfig.cameraFollow) {
                         const camera = this.__scene.activeCamera;
@@ -417,9 +422,40 @@ var TcHmi;
                     }
                 }
 
-                __updateToolingConfig(config) {
+                async __updateToolingConfig(config) {
+                    await this.__loadToolingModel(config);
                     this.__toolingConfig = config;
-                    this.__updateTooling(this.__toolingPos);
+                }
+
+                async __loadToolingModel(config) {
+                    // prevent concurrent calls
+                    if (!this.__scene || this.__loadingTool) return;
+                    this.__loadingTool = true;
+
+                    const oldMesh = this.__scene.getMeshByName("tool");
+                    if (oldMesh) oldMesh.dispose();
+
+                    let m;
+                    if (config.showTooling) {
+                        if (config.modelPath) {
+                            const imported = await BABYLON.SceneLoader.ImportMeshAsync(null, config.modelPath);
+                            m = imported.meshes[0];
+                            m.name = m.id = "tool";
+                        } else {
+                            m = BABYLON.MeshBuilder.CreateCylinder("tool", { diameter: 0.1, height: 0.5 });
+                        }
+
+                        if (m) {
+                            m.scaling = new BABYLON.Vector3(
+                                parseFloat(config.scaling.x),
+                                parseFloat(config.scaling.y),
+                                parseFloat(config.scaling.z)
+                            );
+                        }
+                    }
+
+                    this.__loadingTool = false;
+                    this.__updateTooling(this.__toolingDynamics);
                 }
 
                 // facilitates binding object property members
@@ -548,12 +584,12 @@ var TcHmi;
                     this.__resolveObjectProperty('toolingConfig', value, this.__updateToolingConfig);
                 }
 
-                getToolingPosition() {
-                    return this.__toolingPos;
+                getToolingDynamics() {
+                    return this.__toolingDynamics;
                 }
 
-                setToolingPosition(value) {
-                    this.__resolveObjectProperty('toolingPosition', value, this.__updateTooling);
+                setToolingDynamics(value) {
+                    this.__resolveObjectProperty('toolingDynamics', value, this.__updateTooling);
                 }
 
                 getSceneBgColor() {
