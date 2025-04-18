@@ -28,19 +28,35 @@ var TcHmi;
                     this.__elementCanvas = null;
                     this.__engine = null;
                     this.__scene = null;
-                    this.__lineData = {};
+                    this.__progressLines = {
+                        lines: [],
+                        colors: [],
+                        ids: [],
+                        meshName: "progressLines",
+                        faceIdMap: null,
+                        lineSystem: null
+                    };
+                    this.__toolPathLines = {
+                        MAX_LEN: 32000,
+                        prevPoint: null,
+                        idx: 0,
+                        lines: [],
+                        meshName: "toolPathLines",
+                        lineSystem: null
+                    };
                     this.__selectionZoomData = {};
 
                     this.__pathString = "";
-                    this.__selectedMeshId = 0;
+                    this.__selectedSegment = 0;
                     this.__renderProgress = false;
                     this.__hideG0Lines = false;
                     this.__cncConfig = {
-                        ijkRelative: true, maxArcRenderingPoints: 32
+                        ijkRelative: true,
+                        maxArcRenderingPoints: 32
                     };
                     this.__toolingConfig = {
                         showTooling: true,
-                        modelPath: null,
+                        modelFilePath: null,
                         rotationUnit: "Degrees",
                         positionOffset: {
                             x: 0, y: 0, z: 0
@@ -51,6 +67,7 @@ var TcHmi;
                         scaling: {
                             x: 1.0, y: 1.0, z: 1.0
                         },
+                        trackToolPath: false,
                         cameraFollow: false
                     };
                     this.__toolingDynamics = {
@@ -69,7 +86,8 @@ var TcHmi;
                     this.__g01LineColor = null;
                     this.__g02LineColor = null;
                     this.__g03LineColor = null;
-                    this.__traceLineColor = null;
+                    this.__programTraceLineColor = null;
+                    this.__toolingTraceLineColor = null;
                     this.__lineColors = {};
                 }
 
@@ -88,14 +106,15 @@ var TcHmi;
                         this.__engine = new BABYLON.Engine(this.__elementCanvas, true);
                     }
 
+                    // init scene
+                    this.__initScene();
+
                     // Call __previnit of base class
                     super.__previnit();
                 }
 
                 __init() {
                     super.__init();
-                    // init scene
-                    this.__initScene();
                 }
                 __attach() {
                     super.__attach();
@@ -147,18 +166,14 @@ var TcHmi;
                         // give time for init, then resize
                         setTimeout(() => { engine.resize(); }, 1000);
 
-                        // background color
-                        if (this.__sceneBgColor) {
-                            scene.clearColor = this.__hmiColorToBablyonColor(this.__sceneBgColor);
-                        }
-
                         // line colors
                         this.__lineColors = {
-                            g00: this.__hmiColorToBablyonColor(this.__g00LineColor) ?? new BABYLON.Color4(0, 0, 1, 1),
-                            g01: this.__hmiColorToBablyonColor(this.__g01LineColor) ?? new BABYLON.Color4(0, 1, 0, 1),
-                            g02: this.__hmiColorToBablyonColor(this.__g02LineColor) ?? new BABYLON.Color4(0, 1, 0, 1),
-                            g03: this.__hmiColorToBablyonColor(this.__g03LineColor) ?? new BABYLON.Color4(0, 1, 0, 1),
-                            trace: this.__hmiColorToBablyonColor(this.__traceLineColor) ?? new BABYLON.Color4(1, 0, 0, 1) 
+                            g00: new BABYLON.Color4(0, 0, 1, 1),
+                            g01: new BABYLON.Color4(0, 1, 0, 1),
+                            g02: new BABYLON.Color4(0, 1, 0, 1),
+                            g03: new BABYLON.Color4(0, 1, 0, 1),
+                            programTrace: new BABYLON.Color4(1, 0, 0, 1),
+                            toolingTrace: new BABYLON.Color4(1, 1, 1, 1) 
                         };
 
                         // mouse events
@@ -170,7 +185,7 @@ var TcHmi;
                                     if (!pointerInfo.pickInfo.hit) return;
 
                                     if (!this.__selectionZoomData.drag) {
-                                        if (pointerInfo.pickInfo.pickedMesh.id === "lineSystem") {
+                                        if (pointerInfo.pickInfo.pickedMesh.id === this.__progressLines.meshName) {
                                             this.__onMeshPicked(pointerInfo.pickInfo);
                                         } else {
                                             if (!this.__selectionZoom) return;
@@ -189,17 +204,7 @@ var TcHmi;
                                     break;
                             }
                         });
-
-                        // load tooling
-                        if (this.__toolingConfig.showTooling)
-                            this.__loadToolingModel(this.__toolingConfig);
                     }
-                }
-
-                __hmiColorToBablyonColor(hmiColor) {
-                    if (hmiColor == null) return;
-                    const [r, g, b, a] = hmiColor.color.match(/[\d\.]+/g).map(Number);
-                    return new BABYLON.Color4((r / 255), (g / 255), (b / 255), a);
                 }
 
                 __handleResize() {
@@ -253,10 +258,10 @@ var TcHmi;
 
                 // mesh clicked handler
                 __onMeshPicked(pickInfo) {
-                    const id = this.__lineData.faceIdMap.get(pickInfo.subMeshFaceId);
-                    this.__selectedMeshId = id;
+                    const id = this.__progressLines.faceIdMap.get(pickInfo.subMeshFaceId);
+                    this.__selectedSegment = id;
                     TcHmi.EventProvider.raise(`${this.getId()}.onPropertyChanged`, {
-                        propertyName: "SelectedMeshId",
+                        propertyName: "SelectedSegment",
                     });
                 }
 
@@ -297,8 +302,6 @@ var TcHmi;
                 // main rendering logic
                 __renderPath(gcode) {
 
-                    this.__initScene();
-
                     // trace path
                     const interpreter = new GCodePathInterpreter(this.__cncConfig);
                     const paths = interpreter.Trace(gcode);
@@ -324,8 +327,10 @@ var TcHmi;
                     });
 
                     // create line system
+                    const oldLs = this.__scene.getMeshByName(this.__progressLines.meshName);
+                    if (oldLs) oldLs.dispose();
                     const ls = BABYLON.MeshBuilder.CreateLineSystem(
-                        "lineSystem",
+                        this.__progressLines.meshName,
                         {
                             lines: lines,
                             colors: colors,
@@ -337,11 +342,11 @@ var TcHmi;
                     ls.intersectionThreshold = 0.05;
 
                     // store line data in control state
-                    this.__lineData.lineSystem = ls;
-                    this.__lineData.lines = lines;
-                    this.__lineData.colors = colors;
-                    this.__lineData.ids = ids;
-                    this.__lineData.faceIdMap = faceIdMap;
+                    this.__progressLines.lineSystem = ls;
+                    this.__progressLines.lines = lines;
+                    this.__progressLines.colors = colors;
+                    this.__progressLines.ids = ids;
+                    this.__progressLines.faceIdMap = faceIdMap;
 
                     // set view
                     this.__focusMesh(ls);
@@ -361,10 +366,10 @@ var TcHmi;
                     bg.visibility = 0;
                 }
 
-                // set mesh colors based on id
-                __updateRendering(id) {
+                // set line colors
+                __updateProgress(id) {
 
-                    const ld = this.__lineData;
+                    const ld = this.__progressLines;
                     if (!ld.colors) return;
 
                     // set colors
@@ -373,16 +378,16 @@ var TcHmi;
                         traced.push(ld.colors[i].slice());
                         if (ld.ids[i] <= id) {
                             ld.colors[i].forEach((_, j) =>
-                                traced[i][j] = this.__lineColors.trace);
+                                traced[i][j] = this.__lineColors.programTrace);
                         } else {
                             ld.colors[i].forEach((_, j) =>
                                 traced[i][j] = ld.colors[i][j]);
                         }
                     }
 
-                    // update colors
+                    // update
                     ld.lineSystem = BABYLON.MeshBuilder.CreateLineSystem(
-                        "lineSystem",
+                        ld.meshName,
                         {
                             lines: ld.lines,
                             colors: traced,
@@ -401,21 +406,47 @@ var TcHmi;
                     let mesh = this.__scene.getMeshByName("tool");
                     if (!mesh) return;
 
+                    // translate position/rotation
                     this.__toolingDynamics = dynamics;
-
-                    mesh.position.x = this.__toolingConfig.positionOffset.x + parseFloat(dynamics.position.x);
-                    mesh.position.y = this.__toolingConfig.positionOffset.y + parseFloat(dynamics.position.y);
-                    mesh.position.z = this.__toolingConfig.positionOffset.z + parseFloat(dynamics.position.z);
-
-                    // abc rotation
-                    const mult = (this.__toolingConfig.rotationUnit === "Degrees") ? Math.PI / 180 : 1;
-                    mesh.rotation = BABYLON.Vector3.Zero();
-                    mesh.rotation = new BABYLON.Vector3(
-                        (parseFloat(dynamics.rotation.x) + this.__toolingConfig.rotationOffset.x) * mult,
-                        (parseFloat(dynamics.rotation.y) + this.__toolingConfig.rotationOffset.y) * mult,
-                        (parseFloat(dynamics.rotation.z) + this.__toolingConfig.rotationOffset.z) * mult
+                    this.__translateMesh(
+                        mesh,
+                        {
+                            position: {
+                                x: this.__toolingConfig.positionOffset.x + dynamics.position.x,
+                                y: this.__toolingConfig.positionOffset.y + dynamics.position.y,
+                                z: this.__toolingConfig.positionOffset.z + dynamics.position.z
+                            },
+                            rotation: {
+                                x: this.__toolingConfig.rotationOffset.x + dynamics.rotation.x,
+                                y: this.__toolingConfig.rotationOffset.y + dynamics.rotation.y,
+                                z: this.__toolingConfig.rotationOffset.z + dynamics.rotation.z
+                            }
+                        }
                     );
 
+                    // render tool path
+                    if (this.__toolingConfig.trackToolPath) {
+                        const tpl = this.__toolPathLines;
+                        // static init - linesystem lines cannot be added/removed
+                        if (tpl.lines.length === 0) {
+                            tpl.lines = Array(tpl.MAX_LEN).fill(0).map((_, i) => [BABYLON.Vector3.Zero(), BABYLON.Vector3.Zero()]);
+                        }
+                        const currPoint = new BABYLON.Vector3(dynamics.position.x, dynamics.position.y, dynamics.position.z);
+                        if (tpl.prevPoint) {
+                            if (tpl.idx === tpl.MAX_LEN) {
+                                tpl.lines.shift();
+                                tpl.lines.push([tpl.prevPoint, currPoint]);
+                            } else {
+                                tpl.lines[tpl.idx] = [tpl.prevPoint, currPoint];
+                                tpl.idx++;
+                            }
+                            tpl.lineSystem = BABYLON.CreateLineSystem(tpl.meshName, { lines: tpl.lines, instance: tpl.lineSystem, updatable: true }, this.__scene);
+                            tpl.lineSystem.color = this.__lineColors.toolingTrace;
+                        }
+                        tpl.prevPoint = currPoint;
+                    }
+
+                    // follow tool with camera - WIP
                     if (this.__toolingConfig.cameraFollow) {
                         const camera = this.__scene.activeCamera;
                         camera?.setTarget(mesh);
@@ -423,8 +454,15 @@ var TcHmi;
                 }
 
                 async __updateToolingConfig(config) {
-                    await this.__loadToolingModel(config);
+                    if (config.modelFilePath !== this.__toolingConfig.modelFilePath) {
+                        await this.__loadToolingModel(config);
+                    }
+                    if (config.trackToolPath !== this.__toolingConfig.trackToolPath) {
+                        const ls = this.__scene?.getMeshByName(this.__toolPathLines.meshName);
+                        if (ls) ls.visibility = config.trackToolPath;
+                    }
                     this.__toolingConfig = config;
+                    
                 }
 
                 async __loadToolingModel(config) {
@@ -435,27 +473,43 @@ var TcHmi;
                     const oldMesh = this.__scene.getMeshByName("tool");
                     if (oldMesh) oldMesh.dispose();
 
+                    // load tooling model
                     let m;
                     if (config.showTooling) {
-                        if (config.modelPath) {
-                            const imported = await BABYLON.SceneLoader.ImportMeshAsync(null, config.modelPath);
+                        if (config.modelFilePath) {
+                            const imported = await BABYLON.SceneLoader.ImportMeshAsync(null, config.modelFilePath);
                             m = imported.meshes[0];
                             m.name = m.id = "tool";
                         } else {
                             m = BABYLON.MeshBuilder.CreateCylinder("tool", { diameter: 0.1, height: 0.5 });
                         }
 
-                        if (m) {
-                            m.scaling = new BABYLON.Vector3(
-                                parseFloat(config.scaling.x),
-                                parseFloat(config.scaling.y),
-                                parseFloat(config.scaling.z)
-                            );
-                        }
+                        this.__translateMesh(m,
+                            {
+                                position: config.positionOffset,
+                                rotation: config.rotationOffset,
+                                scaling: config.scaling
+                            }
+                        );
                     }
 
                     this.__loadingTool = false;
-                    this.__updateTooling(this.__toolingDynamics);
+                }
+
+                __translateMesh(mesh, translate) {
+                    if (!mesh || !translate) return;
+                    const mult = (this.__toolingConfig.rotationUnit === "Degrees") ? Math.PI / 180 : 1;
+                    mesh.position = new BABYLON.Vector3(translate.position.x, translate.position.y, translate.position.z);
+                    mesh.rotation = new BABYLON.Vector3(translate.rotation.x * mult, translate.rotation.y * mult, translate.rotation.z * mult);
+                    if (translate.scaling) {
+                        mesh.scaling = new BABYLON.Vector3(translate.scaling.x, translate.scaling.y, translate.scaling.z);
+                    }
+                }
+
+                __hmiColorToBablyonColor(hmiColor) {
+                    if (hmiColor == null) return;
+                    const [r, g, b, a] = hmiColor.color.match(/[\d\.]+/g).map(Number);
+                    return new BABYLON.Color4((r / 255), (g / 255), (b / 255), a);
                 }
 
                 // facilitates binding object property members
@@ -526,20 +580,29 @@ var TcHmi;
                 }
 
                 resetCamera() {
-                    if (this.__lineData.lineSystem)
-                        this.__focusMesh(this.__lineData.lineSystem);
+                    if (this.__progressLines.lineSystem)
+                        this.__focusMesh(this.__progressLines.lineSystem);
+                }
+
+                clearToolPath() {
+                    const ls = this.__scene?.getMeshByName(this.__toolPathLines.meshName);
+                    ls?.dispose();
+                    this.__toolPathLines.lineSystem = null;
+                    this.__toolPathLines.lines = [];
+                    this.__toolPathLines.idx = 0;
+                    this.__toolPathLines.prevPoint = null;
                 }
 
                 /// properties
 
-                getSelectedMeshId() {
-                    return this.__selectedMeshId;
+                getSelectedSegment() {
+                    return this.__selectedSegment;
                 }
 
-                setSelectedMeshId(value) {
-                    this.__selectedMeshId = value;
+                setSelectedSegment(value) {
+                    this.__selectedSegment = value;
                     if (this.__renderProgress) {
-                        this.__updateRendering(value);
+                        this.__updateProgress(value);
                     }
                 }
 
@@ -598,6 +661,7 @@ var TcHmi;
 
                 setSceneBgColor(value) {
                     this.__sceneBgColor = value;
+                    this.__scene.clearColor = this.__hmiColorToBablyonColor(this.__sceneBgColor);
                 }
 
                 getG00LineColor() {
@@ -606,6 +670,7 @@ var TcHmi;
 
                 setG00LineColor(value) {
                     this.__g00LineColor = value;
+                    this.__lineColors.g00 = this.__hmiColorToBablyonColor(this.__g00LineColor);
                 }
 
                 getG01LineColor() {
@@ -614,6 +679,7 @@ var TcHmi;
 
                 setG01LineColor(value) {
                     this.__g01LineColor = value;
+                    this.__lineColors.g01 = this.__hmiColorToBablyonColor(this.__g01LineColor);
                 }
 
                 getG02LineColor() {
@@ -622,6 +688,7 @@ var TcHmi;
 
                 setG02LineColor(value) {
                     this.__g02LineColor = value;
+                    this.__lineColors.g02 = this.__hmiColorToBablyonColor(this.__g02LineColor);
                 }
 
                 getG03LineColor() {
@@ -630,14 +697,25 @@ var TcHmi;
 
                 setG03LineColor(value) {
                     this.__g03LineColor = value;
+                    this.__lineColors.g03 = this.__hmiColorToBablyonColor(this.__g03LineColor);
                 }
 
-                getTraceLineColor() {
-                    return this.__traceLineColor;
+                getProgramTraceLineColor() {
+                    return this.__programTraceLineColor;
                 }
 
-                setTraceLineColor(value) {
-                    this.__traceLineColor = value;
+                setProgramTraceLineColor(value) {
+                    this.__programTraceLineColor = value;
+                    this.__lineColors.programTrace = this.__hmiColorToBablyonColor(this.__programTraceLineColor);
+                }
+
+                getToolingTraceLineColor() {
+                    return this.__toolingTraceLineColor;
+                }
+
+                setToolingTraceLineColor(value) {
+                    this.__toolingTraceLineColor = value;
+                    this.__lineColors.toolingTrace = this.__hmiColorToBablyonColor(this.__toolingTraceLineColor);
                 }
             }
             TcHmiCncControls.GCodePathRenderer = GCodePathRenderer;

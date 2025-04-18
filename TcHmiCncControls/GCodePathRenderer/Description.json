@@ -84,11 +84,11 @@
     },
   "attributes": [
     {
-      "displayName": "Selected Mesh",
-      "name": "data-tchmi-selected-mesh",
-      "propertyGetterName": "getSelectedMeshId",
-      "propertySetterName": "setSelectedMeshId",
-      "propertyName": "SelectedMeshId",
+      "displayName": "Selected Segment",
+      "name": "data-tchmi-selected-segment",
+      "propertyGetterName": "getSelectedSegment",
+      "propertySetterName": "setSelectedSegment",
+      "propertyName": "SelectedSegment",
       "type": "tchmi:general#/definitions/Number",
       "category": "Common",
       "bindable": true,
@@ -244,16 +244,28 @@
       "description": "G03 Line Color."
     },
     {
-      "displayName": "Trace Line Color",
-      "name": "data-tchmi-traceline-color",
-      "propertyGetterName": "getTraceLineColor",
-      "propertySetterName": "setTraceLineColor",
-      "propertyName": "traceLineColor",
+      "displayName": "Program Trace Line Color",
+      "name": "data-tchmi-program-traceline-color",
+      "propertyGetterName": "getProgramTraceLineColor",
+      "propertySetterName": "setProgramTraceLineColor",
+      "propertyName": "programTraceLineColor",
       "type": "tchmi:framework#/definitions/SolidColor",
       "category": "Colors",
       "defaultValue": null,
       "defaultValueInternal": null,
-      "description": "Trace (Progress) Line Color."
+      "description": "Program Trace Line Color."
+    },
+    {
+      "displayName": "Tooling Trace Line Color",
+      "name": "data-tchmi-tooling-traceline-color",
+      "propertyGetterName": "getToolingTraceLineColor",
+      "propertySetterName": "setToolingTraceLineColor",
+      "propertyName": "toolingTraceLineColor",
+      "type": "tchmi:framework#/definitions/SolidColor",
+      "category": "Colors",
+      "defaultValue": null,
+      "defaultValueInternal": null,
+      "description": "Tooling Trace Line Color."
     }
   ],
   "attributeCategories": [
@@ -270,7 +282,7 @@
       "name": "setPath",
       "type": null,
       "visible": true,
-      "description": "Writes the code path to render.",
+      "description": "Writes the code path to render",
       "params": [
         {
           "displayName": "Path",
@@ -289,7 +301,16 @@
       "name": "resetCamera",
       "type": null,
       "visible": true,
-      "description": "Resets camera view."
+      "description": "Resets camera view"
+    },
+    {
+      "category": "Tooling",
+      "displayName": "ClearToolPath",
+      "heritable": true,
+      "name": "clearToolPath",
+      "type": null,
+      "visible": true,
+      "description": "Clears the rendered tool path lines"
     }
   ],
   "events": [],

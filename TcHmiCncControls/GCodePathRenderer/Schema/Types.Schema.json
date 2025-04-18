@@ -87,7 +87,7 @@
         "showTooling": {
           "type": "boolean"
         },
-        "modelPath": {
+        "modelFilePath": {
           "$ref": "tchmi:framework#/definitions/Path"
         },
         "rotationUnit": {
@@ -103,6 +103,9 @@
         "scaling": {
           "$ref": "tchmi:framework#/definitions/Vector3"
         },
+        "trackToolPath": {
+          "type": "boolean"
+        },
         "cameraFollow": {
           "type": "boolean"
         }
@@ -117,8 +120,8 @@
           "defaultValueInternal": true
         },
         {
-          "name": "modelPath",
-          "displayName": "Model Path",
+          "name": "modelFilePath",
+          "displayName": "Model File Path",
           "description": "Path to tooling model file.",
           "displayPriority": 2,
           "defaultValue": null,
@@ -181,10 +184,17 @@
           }
         },
         {
+          "name": "trackToolPath",
+          "displayName": "Track Tool Path",
+          "displayPriority": 7,
+          "description": "Enable tool path tracking from position dynamics.",
+          "defaulValue": false
+        },
+        {
           "name": "cameraFollow",
           "displayName": "Camera Follows",
           "description": "Camera follows tool position when true.",
-          "displayPriority": 7,
+          "displayPriority": 8,
           "defaultValue": false,
           "defaultValueInternal": false
         }
