@@ -19,7 +19,7 @@
     <ProjectName>TcHmiCncControls</ProjectName>
     <Name>TcHmiCncControls</Name>
     <HmiInitial>1.12.760.59</HmiInitial>
-    <HmiRecent>14.3.205.1</HmiRecent>
+    <HmiRecent>14.3.221.1</HmiRecent>
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
   </PropertyGroup>

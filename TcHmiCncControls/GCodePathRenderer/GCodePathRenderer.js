@@ -661,7 +661,7 @@ var TcHmi;
 
                 setSceneBgColor(value) {
                     this.__sceneBgColor = value;
-                    this.__scene.clearColor = this.__hmiColorToBablyonColor(this.__sceneBgColor);
+                    if (value) this.__scene.clearColor = this.__hmiColorToBablyonColor(this.__sceneBgColor);
                 }
 
                 getG00LineColor() {
@@ -670,7 +670,7 @@ var TcHmi;
 
                 setG00LineColor(value) {
                     this.__g00LineColor = value;
-                    this.__lineColors.g00 = this.__hmiColorToBablyonColor(this.__g00LineColor);
+                    if (value) this.__lineColors.g00 = this.__hmiColorToBablyonColor(this.__g00LineColor);
                 }
 
                 getG01LineColor() {
@@ -679,7 +679,7 @@ var TcHmi;
 
                 setG01LineColor(value) {
                     this.__g01LineColor = value;
-                    this.__lineColors.g01 = this.__hmiColorToBablyonColor(this.__g01LineColor);
+                    if (value) this.__lineColors.g01 = this.__hmiColorToBablyonColor(this.__g01LineColor);
                 }
 
                 getG02LineColor() {
@@ -688,7 +688,7 @@ var TcHmi;
 
                 setG02LineColor(value) {
                     this.__g02LineColor = value;
-                    this.__lineColors.g02 = this.__hmiColorToBablyonColor(this.__g02LineColor);
+                    if (value) this.__lineColors.g02 = this.__hmiColorToBablyonColor(this.__g02LineColor);
                 }
 
                 getG03LineColor() {
@@ -697,7 +697,7 @@ var TcHmi;
 
                 setG03LineColor(value) {
                     this.__g03LineColor = value;
-                    this.__lineColors.g03 = this.__hmiColorToBablyonColor(this.__g03LineColor);
+                    if (value) this.__lineColors.g03 = this.__hmiColorToBablyonColor(this.__g03LineColor);
                 }
 
                 getProgramTraceLineColor() {
@@ -706,7 +706,7 @@ var TcHmi;
 
                 setProgramTraceLineColor(value) {
                     this.__programTraceLineColor = value;
-                    this.__lineColors.programTrace = this.__hmiColorToBablyonColor(this.__programTraceLineColor);
+                    if (value) this.__lineColors.programTrace = this.__hmiColorToBablyonColor(this.__programTraceLineColor);
                 }
 
                 getToolingTraceLineColor() {
@@ -715,7 +715,7 @@ var TcHmi;
 
                 setToolingTraceLineColor(value) {
                     this.__toolingTraceLineColor = value;
-                    this.__lineColors.toolingTrace = this.__hmiColorToBablyonColor(this.__toolingTraceLineColor);
+                    if (value) this.__lineColors.toolingTrace = this.__hmiColorToBablyonColor(this.__toolingTraceLineColor);
                 }
             }
             TcHmiCncControls.GCodePathRenderer = GCodePathRenderer;

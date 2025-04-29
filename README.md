@@ -14,14 +14,7 @@ A simple utilization of the [ace editor](https://github.com/ajaxorg/ace) configu
 A GCode parser and interpreter, along with a 3D rendering environment using the [BabylonJS](https://github.com/BabylonJS/Babylon.js) engine. This control is intended to provide a 3D tool path visualization of the supplied GCode string.
 
 #### Version Info
-The framework project has recently been ported to TwinCAT HMI 1.14. To open it in 1.12, simply change the following like in the `TcHmiCncControls\TcHmiCncControls.hmiextproj` file:
-```
-<HmiRecent>14.n...</HmiRecent>
-```
-to
-```
-<HmiRecent>1.12.760.59</HmiRecent>
-```
+The master branch will be for TwinCAT HMI version 14.n (currently 14.3). We will maintain a separate branch for users of 1.12.
 
 ### Quick Start
 
