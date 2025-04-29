@@ -3,13 +3,9 @@
   "compileOnSave": true,
   "compilerOptions": {
     "module": "none",
-    "target": "ES2022",
+    "target": "ES2020",
     "skipLibCheck": true,
-    "lib": [
-      "DOM",
-      "DOM.Iterable",
-      "ES2023"
-    ],
+    "lib": [ "DOM", "DOM.Iterable", "ES2019", "ES2020.BigInt" ],
     "types": [],
     "declaration": true,
     "sourceMap": true,

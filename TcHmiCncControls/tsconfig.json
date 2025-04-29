@@ -3,13 +3,9 @@
   "compileOnSave": true,
   "compilerOptions": {
     "module": "none",
-    "target": "ES2022",
+    "target": "ES2020",
     "skipLibCheck": true,
-    "lib": [
-      "DOM",
-      "DOM.Iterable",
-      "ES2023"
-    ],
+    "lib": [ "DOM", "DOM.Iterable", "ES2019", "ES2020.BigInt" ],
     "types": [],
     "declaration": true,
     "sourceMap": true,
@@ -24,6 +20,6 @@
     "alwaysStrict": false
   },
   "include": [
-    "../Packages/Beckhoff.TwinCAT.HMI.Framework.14.2.110/runtimes/native1.12-tchmi/TcHmi.d.ts"
+    "../Packages/Beckhoff.TwinCAT.HMI.Framework.12.762.46/runtimes/native1.12-tchmi/TcHmi.d.ts"
   ]
 }

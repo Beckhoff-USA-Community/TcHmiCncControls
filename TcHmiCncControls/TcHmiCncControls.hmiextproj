@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="..\packages\Microsoft.TypeScript.MSBuild.5.8.1\build\Microsoft.TypeScript.MSBuild.props" Condition="Exists('..\packages\Microsoft.TypeScript.MSBuild.5.8.1\build\Microsoft.TypeScript.MSBuild.props')" />
+  <Import Project="packages\Microsoft.TypeScript.MSBuild.4.9.5\build\Microsoft.TypeScript.MSBuild.props" Condition="Exists('packages\Microsoft.TypeScript.MSBuild.4.9.5\build\Microsoft.TypeScript.MSBuild.props')" />
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <TcHmiDirectory>$(registry:HKEY_CURRENT_USER\Software\Beckhoff\TwinCAT3\3.1@InstallDir)\..\Functions\TE2000-HMI-Engineering</TcHmiDirectory>
@@ -15,13 +15,10 @@
     <TargetFrameworkMoniker>native,Version=v1.12.0,Profile=tchmi</TargetFrameworkMoniker>
     <TargetFramework>native1.12-tchmi</TargetFramework>
     <ProjectTypeGuids>{3B740506-4966-4147-AB1F-357FE08946EA}</ProjectTypeGuids>
-    <ProjectGuid>183f8f26-eca7-4a57-8f67-ce529a299577</ProjectGuid>
+    <ProjectGuid>c5861e01-6939-4278-a1bf-a50101f5e572</ProjectGuid>
     <ProjectName>TcHmiCncControls</ProjectName>
     <Name>TcHmiCncControls</Name>
-    <HmiInitial>1.12.760.59</HmiInitial>
-    <HmiRecent>14.3.205.1</HmiRecent>
-    <NuGetPackageImportStamp>
-    </NuGetPackageImportStamp>
+    <HmiRecent>1.12.762.46</HmiRecent>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|TwinCAT HMI' ">
     <PlatformTarget>TwinCAT HMI</PlatformTarget>
@@ -33,10 +30,6 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <DefaultNamespace>TcHmiCncControls</DefaultNamespace>
-    <PreBuildEvent>
-    </PreBuildEvent>
-    <PostBuildEvent />
-    <RunPostBuildEvent>Always</RunPostBuildEvent>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|TwinCAT HMI' ">
     <PlatformTarget>TwinCAT HMI</PlatformTarget>
@@ -60,6 +53,10 @@
   <ItemGroup>
     <Content Include=".eslintrc.json">
       <Visible>false</Visible>
+    </Content>
+    <Content Include="tsconfig.tpl.json">
+      <SubType>Content</SubType>
+      <Visible>true</Visible>
     </Content>
     <Content Include="GCodeEditor\Description.json">
       <SubType>Content</SubType>
@@ -145,19 +142,13 @@
     <Content Include="GCodePathRenderer\Themes\Base\Style.css">
       <SubType>Content</SubType>
     </Content>
-    <Content Include="package.json">
-      <SubType>Content</SubType>
-    </Content>
-    <Content Include="tsconfig.tpl.json">
-      <SubType>Content</SubType>
-      <Visible>true</Visible>
-    </Content>
     <Content Include="tsconfig.json">
       <SubType>Content</SubType>
       <Visible>true</Visible>
       <DependentUpon>tsconfig.tpl.json</DependentUpon>
     </Content>
     <HmiManifest Include="Manifest.json" />
+    <Content Include="LICENSE.txt" />
     <Content Include="Images\logo.png" />
     <Content Include="TcHmiCncControls.nuspec" />
     <Content Include=".tfignore">
@@ -220,18 +211,6 @@
 			BaseClean
 		</CleanDependsOn>
   </PropertyGroup>
-  <PropertyGroup>
-    <_TcHmiNodeJsMode>Global</_TcHmiNodeJsMode>
-    <_TcHmiNodeJsMode Condition="'$(_TcHmiNodeJsMode)' == ''">Global</_TcHmiNodeJsMode>
-    <_TcHmiNodePath Condition="'$(_TcHmiNodeJsMode)' == 'Global'">$(registry:HKEY_LOCAL_MACHINE\SOFTWARE\Node.js@InstallPath)</_TcHmiNodePath>
-    <_TcHmiNodePath Condition="'$(_TcHmiNodeJsMode)' == 'Global' AND '$(_TcHmiNodePath)' == '' AND Exists('C:\Program Files\nodejs\')">C:\Program Files\nodejs\</_TcHmiNodePath>
-    <_TcHmiNodePath Condition="'$(_TcHmiNodeJsMode)' == 'Global' AND '$(_TcHmiNodePath)' == '' AND Exists('C:\Program Files (x86)\nodejs\')">C:\Program Files (x86)\nodejs\</_TcHmiNodePath>
-  </PropertyGroup>
-  <Target Name="ReTargetNodePath" Condition="'$(_TcHmiNodePath)' != ''" BeforeTargets="$(CompileDependsOn)">
-    <PropertyGroup>
-      <NodePath>$(_TcHmiNodePath)</NodePath>
-    </PropertyGroup>
-  </Target>
   <Target Name="CoreBuild">
   </Target>
   <Target Name="Build" DependsOnTargets="$(BuiltProjectOutputGroupDependsOn)" />
@@ -241,8 +220,8 @@
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\Microsoft.TypeScript.MSBuild.5.8.1\build\Microsoft.TypeScript.MSBuild.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.TypeScript.MSBuild.5.8.1\build\Microsoft.TypeScript.MSBuild.props'))" />
-    <Error Condition="!Exists('..\packages\Microsoft.TypeScript.MSBuild.5.8.1\build\Microsoft.TypeScript.MSBuild.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.TypeScript.MSBuild.5.8.1\build\Microsoft.TypeScript.MSBuild.targets'))" />
+    <Error Condition="!Exists('packages\Microsoft.TypeScript.MSBuild.4.9.5\build\Microsoft.TypeScript.MSBuild.props')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Microsoft.TypeScript.MSBuild.4.9.5\build\Microsoft.TypeScript.MSBuild.props'))" />
+    <Error Condition="!Exists('packages\Microsoft.TypeScript.MSBuild.4.9.5\build\Microsoft.TypeScript.MSBuild.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Microsoft.TypeScript.MSBuild.4.9.5\build\Microsoft.TypeScript.MSBuild.targets'))" />
   </Target>
-  <Import Project="..\packages\Microsoft.TypeScript.MSBuild.5.8.1\build\Microsoft.TypeScript.MSBuild.targets" Condition="Exists('..\packages\Microsoft.TypeScript.MSBuild.5.8.1\build\Microsoft.TypeScript.MSBuild.targets')" />
+  <Import Project="packages\Microsoft.TypeScript.MSBuild.4.9.5\build\Microsoft.TypeScript.MSBuild.targets" Condition="Exists('packages\Microsoft.TypeScript.MSBuild.4.9.5\build\Microsoft.TypeScript.MSBuild.targets')" />
 </Project>
