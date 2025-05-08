@@ -52,7 +52,15 @@ var TcHmi;
                     this.__hideG0Lines = false;
                     this.__cncConfig = {
                         ijkRelative: true,
-                        maxArcRenderingPoints: 32
+                        maxArcRenderingPoints: 32,
+                        workOffsets: {
+                            g54: { x: 0.0, y: 0.0, z: 0.0 },
+                            g55: { x: 0.0, y: 0.0, z: 0.0 },
+                            g56: { x: 0.0, y: 0.0, z: 0.0 },
+                            g57: { x: 0.0, y: 0.0, z: 0.0 },
+                            g58: { x: 0.0, y: 0.0, z: 0.0 },
+                            g59: { x: 0.0, y: 0.0, z: 0.0 },
+                        }
                     };
                     this.__toolingConfig = {
                         showTooling: true,
@@ -303,6 +311,7 @@ var TcHmi;
                 __renderPath(gcode) {
 
                     // trace path
+                    console.log(this.__cncConfig);
                     const interpreter = new GCodePathInterpreter(this.__cncConfig);
                     const paths = interpreter.Trace(gcode);
                     const parent = this;
@@ -636,7 +645,18 @@ var TcHmi;
                 }
 
                 setCncConfig(value) {
-                    this.__cncConfig = value;
+                    this.__cncConfig.ijkRelative = value.ijkRelative || false;
+                    this.__cncConfig.maxArcRenderingPoints = value.maxArcRenderingPoints || 32;
+                    if (value.workOffsets) {
+                        this.__cncConfig.workOffsets = {
+                            g54: value.workOffsets.g54 || { x: 0.0, y: 0.0, z: 0.0 },
+                            g55: value.workOffsets.g55 || { x: 0.0, y: 0.0, z: 0.0 },
+                            g56: value.workOffsets.g56 || { x: 0.0, y: 0.0, z: 0.0 },
+                            g57: value.workOffsets.g57 || { x: 0.0, y: 0.0, z: 0.0 },
+                            g58: value.workOffsets.g58 || { x: 0.0, y: 0.0, z: 0.0 },
+                            g59: value.workOffsets.g59 || { x: 0.0, y: 0.0, z: 0.0 },
+                        };
+                    }
                 }
 
                 getToolingConfig() {

@@ -15,6 +15,59 @@
         },
         "maxArcRenderPoints": {
           "type": "integer"
+        },
+        "workOffsets": {
+          "type": "object",
+          "properties": {
+            "g54": {
+              "$ref": "tchmi:framework#/definitions/Vector3",
+              "default": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            },
+            "g55": {
+              "$ref": "tchmi:framework#/definitions/Vector3",
+              "default": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            },
+            "g56": {
+              "$ref": "tchmi:framework#/definitions/Vector3",
+              "default": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            },
+            "g57": {
+              "$ref": "tchmi:framework#/definitions/Vector3",
+              "default": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            },
+            "g58": {
+              "$ref": "tchmi:framework#/definitions/Vector3",
+              "default": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            },
+            "g59": {
+              "$ref": "tchmi:framework#/definitions/Vector3",
+              "default": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          }
         }
       },
       "propertiesMeta": [
@@ -33,6 +86,12 @@
           "description": "Max number of points used for arc interpolation (rendering only).",
           "defaultValue": 32,
           "defaultValueInternal": 32
+        },
+        {
+          "name": "workOffsets",
+          "displayName": "Work Offsets",
+          "displayPriority": 3,
+          "description": "G54-G59 Work offset coordinates."
         }
       ]
     },
