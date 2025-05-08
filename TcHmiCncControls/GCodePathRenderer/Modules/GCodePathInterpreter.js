@@ -13,11 +13,13 @@ class GCodeTracedPath {
 class GCodePathInterpreter {
 
     constructor(config) {
-        this.multiplier = 1.0;
+        this.unitScaling = 1.0;
         this.relative = false;
         this.prevPoint = { x: 0, y: 0, z: 0, i: 0, j: 0, k: 0 };
         this.ijkRelative = config.ijkRelative;
         this.maxArcPoints = config.maxArcRenderingPoints || 32;
+        this.workOffsets = config.workOffsets;
+        this.activeWorkOffset = { x: 0.0, y: 0.0, z: 0.0 };
     }
 
     // takes raw gcode string
@@ -46,7 +48,9 @@ class GCodePathInterpreter {
         return points;
     }
 
-    // processes code arguments, applies unit scaling and relative positioning
+    // processes code arguments, applies
+    // unit scaling, relative positioning, active work offset
+    // returns scaled { x, y, z, i, j, k, r } values
     getScaledPoint(args) {
 
         if (args.x === undefined && args.y === undefined && args.z === undefined) {
@@ -58,24 +62,27 @@ class GCodePathInterpreter {
         if (args.x === undefined) {
             x = this.prevPoint.x;
         } else {
-            x = this.multiplier * ((this.relative) ? args.x + this.prevPoint.x : args.x);
+            x = this.unitScaling *
+                ((this.relative) ? this.prevPoint.x + args.x : this.activeWorkOffset.x + args.x);
         }
 
         if (args.y === undefined) {
             y = this.prevPoint.y;
         } else {
-            y = this.multiplier * ((this.relative) ? args.y + this.prevPoint.y : args.y);
+            y = this.unitScaling *
+                ((this.relative) ? this.prevPoint.y + args.y : this.activeWorkOffset.y + args.y);
         }
 
         if (args.z === undefined) {
             z = this.prevPoint.z;
         } else {
-            z = this.multiplier * ((this.relative) ? args.z + this.prevPoint.z : args.z);
+            z = this.unitScaling *
+                ((this.relative) ? this.prevPoint.z + args.z : this.activeWorkOffset.z + args.z);
         }
 
-        i = (args.i !== undefined) ? (args.i * this.multiplier) : this.prevPoint.i;
-        j = (args.j !== undefined) ? (args.j * this.multiplier) : this.prevPoint.j;
-        k = (args.k !== undefined) ? (args.k * this.multiplier) : this.prevPoint.k;
+        i = (args.i !== undefined) ? ((args.i + this.activeWorkOffset.x) * this.unitScaling) : this.prevPoint.i;
+        j = (args.j !== undefined) ? ((args.j + this.activeWorkOffset.y) * this.unitScaling) : this.prevPoint.j;
+        k = (args.k !== undefined) ? ((args.k + this.activeWorkOffset.z) * this.unitScaling) : this.prevPoint.k;
         r = (args.r !== undefined) ? args.r : undefined;
 
         return { x: x, y: y, z: z, i: i, j: j, k: k, r: r };
@@ -131,15 +138,30 @@ class GCodePathInterpreter {
 
     // 1-to-1 inch units in rendering
     // CNC machines use 70 (inch) & 71 (mm) for units
-    g70(args) { this.multiplier = 1.0 }
-    g71(args) { this.multiplier = 1.0 / 25.4 }
+    g70(args) { this.unitScaling = 1.0 }
+    g71(args) { this.unitScaling = 1.0 / 25.4 }
 
     // 3D printers use 20/21 codes for units
-    g20(args) { this.multiplier = 1.0 }
-    g21(args) { this.multiplier = 1.0 / 25.4 }
+    g20(args) { this.unitScaling = 1.0 }
+    g21(args) { this.unitScaling = 1.0 / 25.4 }
 
     g90(args) { this.relative = false }
     g91(args) { this.relative = true }
+
+    // work offsets
+    g53(args) { 
+        this.activeWorkOffset = {
+            x: args.x || 0.0,
+            y: args.y || 0.0,
+            z: args.z || 0.0,
+        };
+    }
+    g54(args) { this.activeWorkOffset = this.workOffsets.g54 }
+    g55(args) { this.activeWorkOffset = this.workOffsets.g55 }
+    g56(args) { this.activeWorkOffset = this.workOffsets.g56 }
+    g57(args) { this.activeWorkOffset = this.workOffsets.g57 }
+    g58(args) { this.activeWorkOffset = this.workOffsets.g58 }
+    g59(args) { this.activeWorkOffset = this.workOffsets.g59 }
 
     // calculate center point for radius arcs (2D only)
     calculateCenterPoint(start, end, clockwise) {
