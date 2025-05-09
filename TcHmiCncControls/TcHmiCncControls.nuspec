@@ -2,8 +2,8 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
   <metadata>
     <id>TcHmiCncControls</id>
-    <version>0.1.0</version>
-    <description>(-.-)</description>
+    <version>0.1.1</version>
+    <description>A JavaScript 3D tool path GCode renderer for TwinCAT HMI.</description>
     <authors>Beckhoff Automation USA</authors>
     <title>TcHmiCncControls</title>
     <owners>Brandon Stiffler</owners>
