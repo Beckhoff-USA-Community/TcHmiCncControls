@@ -16,6 +16,9 @@
         "maxArcRenderPoints": {
           "type": "integer"
         },
+        "workArea": {
+          "$ref": "tchmi:framework#/definitions/WorkAreaConfig"
+        },
         "workOffsets": {
           "type": "object",
           "properties": {
@@ -88,9 +91,15 @@
           "defaultValueInternal": 32
         },
         {
+          "name": "workArea",
+          "displayName": "Work Area",
+          "displayPriority": 3,
+          "description": "Work Area"
+        },
+        {
           "name": "workOffsets",
           "displayName": "Work Offsets",
-          "displayPriority": 3,
+          "displayPriority": 4,
           "description": "G54-G59 Work offset coordinates."
         }
       ]
@@ -256,6 +265,81 @@
           "displayPriority": 8,
           "defaultValue": false,
           "defaultValueInternal": false
+        }
+      ]
+    },
+    "WorkAreaConfig": {
+      "title": "Work Area Config",
+      "type": "object",
+      "description": "Work area rendering config",
+      "properties": {
+        "visible": {
+          "type": "boolean"
+        },
+        "color": {
+          "$ref": "tchmi:framework#/definitions/SolidColor"
+        },
+        "length": {
+          "type": "number"
+        },
+        "width": {
+          "type": "number"
+        },
+        "zoffset": {
+          "type": "number"
+        },
+        "units": {
+          "type": "string",
+          "enum": [ "inches", "mm" ]
+        }
+      },
+      "propertiesMeta": [
+        {
+          "name": "visible",
+          "displayName": "Visible",
+          "description": "Show rendering",
+          "displayPriority": 1,
+          "defaultValue": false,
+          "defaultValueInternal": false
+        },
+        {
+          "name": "color",
+          "displayName": "Color",
+          "description": "Work area mesh color",
+          "defaultValue": null,
+          "defaultValueInternal": null
+        },
+        {
+          "name": "length",
+          "displayName": "Length",
+          "description": "Work area length",
+          "displayPriority": 2,
+          "defaultValue": 24,
+          "defaultValueInternal": 24
+        },
+        {
+          "name": "width",
+          "displayName": "Width",
+          "description": "Work area width",
+          "displayPriority": 3,
+          "defaultValue": 24,
+          "defaultValueInternal": 24
+        },
+        {
+          "name": "units",
+          "displayName": "Units",
+          "description": "Work area dimension units",
+          "displayPriority": 4,
+          "defaultValue": "inches",
+          "defaultValueInternal": "inches"
+        },
+        {
+          "name": "zoffset",
+          "displayName": "Z Offset",
+          "description": "Work area Z position offset",
+          "displayPriority": 5,
+          "defaultValue": -0.1,
+          "defaultValueInternal": -0.1
         }
       ]
     },
