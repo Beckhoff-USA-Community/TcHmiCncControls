@@ -53,6 +53,14 @@ var TcHmi;
                     this.__cncConfig = {
                         ijkRelative: true,
                         maxArcRenderingPoints: 32,
+                        workArea: {
+                            visible: false,
+                            length: 24,
+                            width: 24,
+                            units: "inches",
+                            zoffset: -0.1,
+                            color: null
+                        },
                         workOffsets: {
                             g54: { x: 0.0, y: 0.0, z: 0.0 },
                             g55: { x: 0.0, y: 0.0, z: 0.0 },
@@ -88,6 +96,7 @@ var TcHmi;
                     };
                     this.__loadingTool = false;
                     this.__selectionZoom = false;
+                    this.__lockCamera = false;
 
                     this.__sceneBgColor = null;
                     this.__g00LineColor = null;
@@ -309,9 +318,8 @@ var TcHmi;
 
                 // main rendering logic
                 __renderPath(gcode) {
-
+                    
                     // trace path
-                    console.log(this.__cncConfig);
                     const interpreter = new GCodePathInterpreter(this.__cncConfig);
                     const paths = interpreter.Trace(gcode);
                     const parent = this;
@@ -335,9 +343,10 @@ var TcHmi;
                         ids.push(p.id);
                     });
 
-                    // create line system
                     const oldLs = this.__scene.getMeshByName(this.__progressLines.meshName);
                     if (oldLs) oldLs.dispose();
+
+                    // create line system
                     const ls = BABYLON.MeshBuilder.CreateLineSystem(
                         this.__progressLines.meshName,
                         {
@@ -364,7 +373,7 @@ var TcHmi;
                     // create (invisible) ground mesh
                     const bounds = ls.getBoundingInfo();
                     const bg = BABYLON.MeshBuilder.CreatePlane(
-                        "bg",
+                        "zoomBg",
                         {
                             width: bounds.maximum.x + (bounds.maximum.x * 0.25),
                             height: bounds.maximum.y + (bounds.maximum.y * 0.25),
@@ -375,11 +384,38 @@ var TcHmi;
                     bg.visibility = 0;
                 }
 
+                __renderWorkArea(workArea) {
+
+                    let mesh = this.__scene.getMeshByName("workArea");
+                    mesh?.dispose();
+
+                    if (!workArea.visible) return;
+
+                    const length = (workArea.units === "mm") ? (workArea.length / 25.4) : workArea.length;
+                    const width = (workArea.units === "mm") ? (workArea.width / 25.4) : workArea.width;
+
+                    mesh = BABYLON.MeshBuilder.CreatePlane(
+                        "workArea",
+                        {
+                            width: width,
+                            height: length,
+                            sideOrientation: BABYLON.Mesh.DOUBLESIDE
+                        },
+                    );
+
+                    mesh.position = new BABYLON.Vector3((length / 2), (width / 2), workArea.zoffset);
+                    if (workArea.color) {
+                        mesh.color = this.__hmiColorToBablyonColor(workArea.color);
+                    } else {
+                        mesh.color = new BABYLON.Color4(1, 1, 1, 0.75);
+                    }
+                }
+
                 // set line colors
                 __updateProgress(id) {
 
                     const ld = this.__progressLines;
-                    if (!ld.colors) return;
+                    if (!ld.colors || !ld.lineSystem) return;
 
                     // set colors
                     let traced = [];
@@ -454,12 +490,6 @@ var TcHmi;
                         }
                         tpl.prevPoint = currPoint;
                     }
-
-                    // follow tool with camera - WIP
-                    if (this.__toolingConfig.cameraFollow) {
-                        const camera = this.__scene.activeCamera;
-                        camera?.setTarget(mesh);
-                    }
                 }
 
                 async __updateToolingConfig(config) {
@@ -470,6 +500,18 @@ var TcHmi;
                         const ls = this.__scene?.getMeshByName(this.__toolPathLines.meshName);
                         if (ls) ls.visibility = config.trackToolPath;
                     }
+
+                    // follow tool with camera
+                    const camera = this.__scene.activeCamera;
+                    if (config.cameraFollow) {
+                        const mesh = this.__scene.getMeshByName("tool");
+                        if (mesh) camera.lockedTarget = mesh;
+                    } else {
+                        camera.storeState();
+                        camera.lockedTarget = null;
+                        camera.restoreState();
+                    }
+
                     this.__toolingConfig = config;
                     
                 }
@@ -589,8 +631,9 @@ var TcHmi;
                 }
 
                 resetCamera() {
-                    if (this.__progressLines.lineSystem)
+                    if (this.__progressLines.lineSystem) {
                         this.__focusMesh(this.__progressLines.lineSystem);
+                    }
                 }
 
                 clearToolPath() {
@@ -647,6 +690,10 @@ var TcHmi;
                 setCncConfig(value) {
                     this.__cncConfig.ijkRelative = value.ijkRelative || false;
                     this.__cncConfig.maxArcRenderingPoints = value.maxArcRenderingPoints || 32;
+                    if (value.workArea) {
+                        this.__cncConfig.workArea = value.workArea;
+                        this.__renderWorkArea(value.workArea);
+                    }
                     if (value.workOffsets) {
                         this.__cncConfig.workOffsets = {
                             g54: value.workOffsets.g54 || { x: 0.0, y: 0.0, z: 0.0 },
@@ -673,6 +720,19 @@ var TcHmi;
 
                 setToolingDynamics(value) {
                     this.__resolveObjectProperty('toolingDynamics', value, this.__updateTooling);
+                }
+
+                getLockCamera() {
+                    return this.__lockCamera;
+                }
+
+                setLockCamera(value) {
+                    this.__lockCamera = value;
+                    if (this.__lockCamera) {
+                        this.__scene.activeCamera.detachControl();
+                    } else {
+                        this.__scene.activeCamera.attachControl();
+                    }
                 }
 
                 getSceneBgColor() {
