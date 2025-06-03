@@ -62,22 +62,22 @@ class GCodePathInterpreter {
         if (args.x === undefined) {
             x = this.prevPoint.x;
         } else {
-            x = this.unitScaling *
-                ((this.relative) ? this.prevPoint.x + args.x : this.activeWorkOffset.x + args.x);
+            const scaledX = args.x * this.unitScaling;
+            x = ((this.relative) ? this.prevPoint.x + scaledX : this.activeWorkOffset.x + scaledX);
         }
 
         if (args.y === undefined) {
             y = this.prevPoint.y;
         } else {
-            y = this.unitScaling *
-                ((this.relative) ? this.prevPoint.y + args.y : this.activeWorkOffset.y + args.y);
+            const scaledY = args.y * this.unitScaling;
+            y = ((this.relative) ? this.prevPoint.y + scaledY : this.activeWorkOffset.y + scaledY);
         }
 
         if (args.z === undefined) {
             z = this.prevPoint.z;
         } else {
-            z = this.unitScaling *
-                ((this.relative) ? this.prevPoint.z + args.z : this.activeWorkOffset.z + args.z);
+            const scaledZ = args.z * this.unitScaling;
+            z = ((this.relative) ? this.prevPoint.z + scaledZ : this.activeWorkOffset.z + scaledZ);
         }
 
         i = (args.i !== undefined) ? ((args.i + this.activeWorkOffset.x) * this.unitScaling) : this.prevPoint.i;
