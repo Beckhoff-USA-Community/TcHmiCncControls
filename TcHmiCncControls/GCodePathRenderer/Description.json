@@ -184,6 +184,20 @@
       "allowSymbolExpressionsInObject": true
     },
     {
+      "displayName": "Lock Camera",
+      "name": "data-tchmi-lock-camera",
+      "propertyGetterName": "getLockCamera",
+      "propertySetterName": "setLockCamera",
+      "propertyName": "lockCamera",
+      "type": "tchmi:general#/definitions/Boolean",
+      "category": "Common",
+      "bindable": true,
+      "visible": true,
+      "defaultValue": false,
+      "defaultValueInternal": false,
+      "description": "Locks the camera and prevents rotate/zoom/pan controls."
+    },
+    {
       "displayName": "Scene Background Color",
       "name": "data-tchmi-scene-bgcolor",
       "propertyGetterName": "getSceneBgColor",
