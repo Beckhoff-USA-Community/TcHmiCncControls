@@ -26,8 +26,12 @@ var TcHmi;
                     super(element, pcElement, attrs);
 
                     this.__elementCanvas = null;
+
+                    // babylon vars
                     this.__engine = null;
                     this.__scene = null;
+
+                    // line data for path rendering
                     this.__progressLines = {
                         lines: [],
                         colors: [],
@@ -36,6 +40,8 @@ var TcHmi;
                         faceIdMap: null,
                         lineSystem: null
                     };
+
+                    // line data for tool path tracing
                     this.__toolPathLines = {
                         MAX_LEN: 32000,
                         prevPoint: null,
@@ -44,12 +50,18 @@ var TcHmi;
                         meshName: "toolPathLines",
                         lineSystem: null
                     };
-                    this.__selectionZoomData = {};
 
+                    this.__selectionZoomData = {};
+                    this.__selectionZoom = false;
+
+                    // gcode string
                     this.__pathString = "";
+
+                    // selected segment for progress rendering
                     this.__selectedSegment = 0;
                     this.__renderProgress = false;
                     this.__hideG0Lines = false;
+
                     this.__cncConfig = {
                         ijkRelative: true,
                         maxArcRenderingPoints: 32,
@@ -70,6 +82,7 @@ var TcHmi;
                             g59: { x: 0.0, y: 0.0, z: 0.0 },
                         }
                     };
+
                     this.__toolingConfig = {
                         showTooling: true,
                         modelFilePath: null,
@@ -86,6 +99,7 @@ var TcHmi;
                         trackToolPath: false,
                         cameraFollow: false
                     };
+
                     this.__toolingDynamics = {
                         position: {
                             x: 0, y: 0, z: 0
@@ -94,10 +108,13 @@ var TcHmi;
                             x: 0, y: 0, z: 0
                         }
                     };
-                    this.__loadingTool = false;
-                    this.__selectionZoom = false;
+
                     this.__lockCamera = false;
 
+                    // lock flag for async model loading
+                    this.__loadingTool = false;
+
+                    // colors - holds property value in TcHmi color type
                     this.__sceneBgColor = null;
                     this.__g00LineColor = null;
                     this.__g01LineColor = null;
@@ -105,6 +122,8 @@ var TcHmi;
                     this.__g03LineColor = null;
                     this.__programTraceLineColor = null;
                     this.__toolingTraceLineColor = null;
+
+                    // colors - holds converted value in babylon color type
                     this.__lineColors = {};
                 }
 
@@ -137,53 +156,39 @@ var TcHmi;
                     super.__attach();
                 }
                 __detach() {
+                    window.removeEventListener("resize", this.__handleResize);
                     super.__detach();
                 }
 
-                // init / re-init babylon scene
+                // init babylon scene
                 __initScene() {
                     if (this.__engine) {
-
-                        if (this.__scene) {
-                            this.__scene.dispose();
-                            window.removeEventListener("resize", this.__handleResize);
-                        }
 
                         // generate scene
                         const engine = this.__engine;
                         const scene = new BABYLON.Scene(engine);
                         this.__scene = scene;
 
-                        // right-hand coordinate system
                         scene.useRightHandedSystem = true;
 
-                        // init camera
+                        // init default camera
                         const camera = new BABYLON.ArcRotateCamera(
                             "camera0", Math.PI / 2, Math.PI / 2, 7, BABYLON.Vector3.Zero(), scene);
 
-                        // scroll zoom config
+                        // camera settings
                         camera.minZ = 0;
                         camera.wheelPrecision = 40;
-
-                        // prevent zoom through
                         camera.lowerRadiusLimit = 0.5;
                         camera.attachControl();
 
-                        new BABYLON.Debug.AxesViewer(scene, 0.5)
+                        new BABYLON.Debug.AxesViewer(scene, 0.5);
                         new BABYLON.HemisphericLight("light", new BABYLON.Vector3(1, 1, 0), scene);
 
                         // resize engine on window resize
                         window.addEventListener("resize", this.__handleResize);
-
-                        // register render loop
-                        engine.runRenderLoop(function () {
-                            scene.render();
-                        });
-
-                        // give time for init, then resize
                         setTimeout(() => { engine.resize(); }, 1000);
 
-                        // line colors
+                        // init line color defaults
                         this.__lineColors = {
                             g00: new BABYLON.Color4(0, 0, 1, 1),
                             g01: new BABYLON.Color4(0, 1, 0, 1),
@@ -192,6 +197,11 @@ var TcHmi;
                             programTrace: new BABYLON.Color4(1, 0, 0, 1),
                             toolingTrace: new BABYLON.Color4(1, 1, 1, 1) 
                         };
+
+                        // register render loop
+                        engine.runRenderLoop(function () {
+                            scene.render();
+                        });
 
                         // mouse events
                         scene.onPointerObservable.add((pointerInfo) => {
@@ -202,6 +212,7 @@ var TcHmi;
                                     if (!pointerInfo.pickInfo.hit) return;
 
                                     if (!this.__selectionZoomData.drag) {
+                                        // line segment click
                                         if (pointerInfo.pickInfo.pickedMesh.id === this.__progressLines.meshName) {
                                             this.__onMeshPicked(pointerInfo.pickInfo);
                                         } else {
@@ -209,7 +220,6 @@ var TcHmi;
                                             this.__onSelectionZoomStart(pointerInfo.pickInfo);
                                         }
                                     } else this.__onSelectionZoomEnd();
-
                                     break;
 
                                 case BABYLON.PointerEventTypes.POINTERMOVE:
@@ -225,10 +235,10 @@ var TcHmi;
                 }
 
                 __handleResize() {
-                    // resize scene if parent element size changes
                     this.__engine?.resize();
                 }
 
+                // first click initiates drawing zoom area box
                 __onSelectionZoomStart(pickInfo) {
 
                     const start = pickInfo.pickedPoint;
@@ -244,6 +254,7 @@ var TcHmi;
                     this.__selectionZoomData.drag = true;
                 }
 
+                // drag sizing zoom area box
                 __onSelectionZoomDrag(pickInfo) {
 
                     if (!pickInfo.pickedPoint) return;
@@ -264,6 +275,7 @@ var TcHmi;
                     this.__selectionZoomData.end = end;
                 }
 
+                // focus camera to zoomed area
                 __onSelectionZoomEnd() {
 
                     this.__selectionZoomData.mesh.refreshBoundingInfo();
@@ -275,13 +287,18 @@ var TcHmi;
 
                 // mesh clicked handler
                 __onMeshPicked(pickInfo) {
+
+                    // get selected segment
                     const id = this.__progressLines.faceIdMap.get(pickInfo.subMeshFaceId);
                     this.__selectedSegment = id;
+
+                    // set and raise control property change event
                     TcHmi.EventProvider.raise(`${this.getId()}.onPropertyChanged`, {
                         propertyName: "SelectedSegment",
                     });
                 }
 
+                // set camera focus on mesh w/ easing
                 __focusMesh(mesh) {
 
                     if (!this.__scene) return;
@@ -290,15 +307,15 @@ var TcHmi;
                     const camera = this.__scene.activeCamera;
 
                     const bounds = mesh.getBoundingInfo();
-
                     var framingBehavior = new BABYLON.FramingBehavior();
                     framingBehavior.framingTime = 750;
                     framingBehavior.radiusScale = 0.7;
                     framingBehavior.autoCorrectCameraLimitsAndSensibility = false;
                     framingBehavior.elevationReturnTime = -1;
                     framingBehavior.attach(camera);
+
+                    // zoom to appropriate bounds and normal to Z axis
                     framingBehavior.zoomOnBoundingInfo(bounds.maximum, bounds.minimum, false, () => {
-                        // todo: normalize to Z axis or nah?
                         camera.alpha = Math.PI / 2;
                         camera.beta = Math.PI / 2;
                         framingBehavior.detach();
@@ -311,7 +328,7 @@ var TcHmi;
                     // get active camera
                     const camera = this.__scene.activeCamera;
 
-                    // turn off mouse1 camera rotation
+                    // disable mouse camera rotation
                     camera.angularSensibilityX = (enabled) ? 1000000 : 3000;
                     camera.angularSensibilityY = (enabled) ? 1000000 : 3000;
                 }
@@ -319,12 +336,12 @@ var TcHmi;
                 // main rendering logic
                 __renderPath(gcode) {
                     
-                    // trace path
+                    // parse gcode and trace path
                     const interpreter = new GCodePathInterpreter(this.__cncConfig);
                     const paths = interpreter.Trace(gcode);
                     const parent = this;
 
-                    // generate line and color arrays
+                    // generate line and color arrays for line system
                     const lines = [];
                     const colors = [];
                     const ids = [];
@@ -343,10 +360,8 @@ var TcHmi;
                         ids.push(p.id);
                     });
 
-                    const oldLs = this.__scene.getMeshByName(this.__progressLines.meshName);
-                    if (oldLs) oldLs.dispose();
-
-                    // create line system
+                    // clean up / create line system
+                    this.__scene.getMeshByName(this.__progressLines.meshName)?.dispose();
                     const ls = BABYLON.MeshBuilder.CreateLineSystem(
                         this.__progressLines.meshName,
                         {
@@ -356,7 +371,8 @@ var TcHmi;
                         },
                         this.__scene
                     );
-                    // pick threshhold
+
+                    // set pick threshhold (higher value = easier to click select segments)
                     ls.intersectionThreshold = 0.05;
 
                     // store line data in control state
@@ -370,7 +386,8 @@ var TcHmi;
                     this.__focusMesh(ls);
                     this.__toggleSelectionZoom(this.__selectionZoom);
 
-                    // create (invisible) ground mesh
+                    // create (invisible) ground mesh based on bounds of path mesh
+                    // a background mesh is required to get pick points for selection zoom
                     const bounds = ls.getBoundingInfo();
                     const bg = BABYLON.MeshBuilder.CreatePlane(
                         "zoomBg",
@@ -386,15 +403,13 @@ var TcHmi;
 
                 __renderWorkArea(workArea) {
 
-                    let mesh = this.__scene.getMeshByName("workArea");
-                    mesh?.dispose();
-
+                    this.__scene.getMeshByName("workArea")?.dispose();
                     if (!workArea.visible) return;
 
                     const length = (workArea.units === "mm") ? (workArea.length / 25.4) : workArea.length;
                     const width = (workArea.units === "mm") ? (workArea.width / 25.4) : workArea.width;
 
-                    mesh = BABYLON.MeshBuilder.CreatePlane(
+                    const mesh = BABYLON.MeshBuilder.CreatePlane(
                         "workArea",
                         {
                             width: width,
@@ -403,6 +418,8 @@ var TcHmi;
                         },
                     );
 
+                    // assuming origin is bottom-left of work area
+                    // TODO: parameterize?
                     mesh.position = new BABYLON.Vector3((length / 2), (width / 2), workArea.zoffset);
                     if (workArea.color) {
                         mesh.color = this.__hmiColorToBablyonColor(workArea.color);
@@ -411,13 +428,13 @@ var TcHmi;
                     }
                 }
 
-                // set line colors
+                // set colors based on progress (selected segment)
                 __updateProgress(id) {
 
                     const ld = this.__progressLines;
                     if (!ld.colors || !ld.lineSystem) return;
 
-                    // set colors
+                    // set all line segments below selected segment to program trace color
                     let traced = [];
                     for (let i = 0; i < ld.colors.length; i++) {
                         traced.push(ld.colors[i].slice());
@@ -430,7 +447,7 @@ var TcHmi;
                         }
                     }
 
-                    // update
+                    // update line system
                     ld.lineSystem = BABYLON.MeshBuilder.CreateLineSystem(
                         ld.meshName,
                         {
@@ -442,87 +459,38 @@ var TcHmi;
                     );
                 }
 
-                // update tooling
-                __updateTooling(dynamics) {
+                __renderToolPath(dynamics) {
 
-                    if (!this.__scene || this.__loadingTool)
-                        return;
+                    const tpl = this.__toolPathLines;
+                    // initialize - linesystem lines cannot be created or destroyed - only modified
+                    if (tpl.lines.length === 0) {
+                        tpl.lines = Array(tpl.MAX_LEN).fill(0).map((_, i) => [BABYLON.Vector3.Zero(), BABYLON.Vector3.Zero()]);
+                    }
+                    const currPoint = new BABYLON.Vector3(dynamics.position.x, dynamics.position.y, dynamics.position.z);
 
-                    let mesh = this.__scene.getMeshByName("tool");
-                    if (!mesh) return;
-
-                    // translate position/rotation
-                    this.__toolingDynamics = dynamics;
-                    this.__translateMesh(
-                        mesh,
-                        {
-                            position: {
-                                x: this.__toolingConfig.positionOffset.x + dynamics.position.x,
-                                y: this.__toolingConfig.positionOffset.y + dynamics.position.y,
-                                z: this.__toolingConfig.positionOffset.z + dynamics.position.z
-                            },
-                            rotation: {
-                                x: this.__toolingConfig.rotationOffset.x + dynamics.rotation.x,
-                                y: this.__toolingConfig.rotationOffset.y + dynamics.rotation.y,
-                                z: this.__toolingConfig.rotationOffset.z + dynamics.rotation.z
-                            }
+                    // at least two points - start rendering
+                    if (tpl.prevPoint) {
+                        // maintain ring buffer for fixed-size linesystem
+                        if (tpl.idx === tpl.MAX_LEN) {
+                            tpl.lines.shift();
+                            tpl.lines.push([tpl.prevPoint, currPoint]);
+                        } else {
+                            tpl.lines[tpl.idx] = [tpl.prevPoint, currPoint];
+                            tpl.idx++;
                         }
-                    );
-
-                    // render tool path
-                    if (this.__toolingConfig.trackToolPath) {
-                        const tpl = this.__toolPathLines;
-                        // static init - linesystem lines cannot be added/removed
-                        if (tpl.lines.length === 0) {
-                            tpl.lines = Array(tpl.MAX_LEN).fill(0).map((_, i) => [BABYLON.Vector3.Zero(), BABYLON.Vector3.Zero()]);
-                        }
-                        const currPoint = new BABYLON.Vector3(dynamics.position.x, dynamics.position.y, dynamics.position.z);
-                        if (tpl.prevPoint) {
-                            if (tpl.idx === tpl.MAX_LEN) {
-                                tpl.lines.shift();
-                                tpl.lines.push([tpl.prevPoint, currPoint]);
-                            } else {
-                                tpl.lines[tpl.idx] = [tpl.prevPoint, currPoint];
-                                tpl.idx++;
-                            }
-                            tpl.lineSystem = BABYLON.CreateLineSystem(tpl.meshName, { lines: tpl.lines, instance: tpl.lineSystem, updatable: true }, this.__scene);
-                            tpl.lineSystem.color = this.__lineColors.toolingTrace;
-                        }
-                        tpl.prevPoint = currPoint;
+                        tpl.lineSystem = BABYLON.CreateLineSystem(tpl.meshName, { lines: tpl.lines, instance: tpl.lineSystem, updatable: true }, this.__scene);
+                        tpl.lineSystem.color = this.__lineColors.toolingTrace;
                     }
-                }
-
-                async __updateToolingConfig(config) {
-                    if (config.modelFilePath !== this.__toolingConfig.modelFilePath) {
-                        await this.__loadToolingModel(config);
-                    }
-                    if (config.trackToolPath !== this.__toolingConfig.trackToolPath) {
-                        const ls = this.__scene?.getMeshByName(this.__toolPathLines.meshName);
-                        if (ls) ls.visibility = config.trackToolPath;
-                    }
-
-                    // follow tool with camera
-                    const camera = this.__scene.activeCamera;
-                    if (config.cameraFollow) {
-                        const mesh = this.__scene.getMeshByName("tool");
-                        if (mesh) camera.lockedTarget = mesh;
-                    } else {
-                        camera.storeState();
-                        camera.lockedTarget = null;
-                        camera.restoreState();
-                    }
-
-                    this.__toolingConfig = config;
-                    
+                    tpl.prevPoint = currPoint;
                 }
 
                 async __loadToolingModel(config) {
+
                     // prevent concurrent calls
                     if (!this.__scene || this.__loadingTool) return;
                     this.__loadingTool = true;
 
-                    const oldMesh = this.__scene.getMeshByName("tool");
-                    if (oldMesh) oldMesh.dispose();
+                    this.__scene.getMeshByName("tool")?.dispose();
 
                     // load tooling model
                     let m;
@@ -547,13 +515,14 @@ var TcHmi;
                     this.__loadingTool = false;
                 }
 
-                __translateMesh(mesh, translate) {
-                    if (!mesh || !translate) return;
+                __translateMesh(mesh, translation) {
+
+                    if (!mesh || !translation) return;
                     const mult = (this.__toolingConfig.rotationUnit === "Degrees") ? Math.PI / 180 : 1;
-                    mesh.position = new BABYLON.Vector3(translate.position.x, translate.position.y, translate.position.z);
-                    mesh.rotation = new BABYLON.Vector3(translate.rotation.x * mult, translate.rotation.y * mult, translate.rotation.z * mult);
-                    if (translate.scaling) {
-                        mesh.scaling = new BABYLON.Vector3(translate.scaling.x, translate.scaling.y, translate.scaling.z);
+                    mesh.position = new BABYLON.Vector3(translation.position.x, translation.position.y, translation.position.z);
+                    mesh.rotation = new BABYLON.Vector3(translation.rotation.x * mult, translation.rotation.y * mult, translation.rotation.z * mult);
+                    if (translation.scaling) {
+                        mesh.scaling = new BABYLON.Vector3(translation.scaling.x, translation.scaling.y, translation.scaling.z);
                     }
                 }
 
@@ -609,17 +578,70 @@ var TcHmi;
                     }
                 }
 
+                // object property resolvers
+
+                async __updateToolingConfig(config) {
+
+                    if (config.modelFilePath !== this.__toolingConfig.modelFilePath) {
+                        await this.__loadToolingModel(config);
+                    }
+                    if (config.trackToolPath !== this.__toolingConfig.trackToolPath) {
+                        const ls = this.__scene?.getMeshByName(this.__toolPathLines.meshName);
+                        if (ls) ls.visibility = config.trackToolPath;
+                    }
+
+                    // follow tool with camera
+                    const camera = this.__scene.activeCamera;
+                    if (config.cameraFollow) {
+                        const mesh = this.__scene.getMeshByName("tool");
+                        if (mesh) camera.lockedTarget = mesh;
+                    } else {
+                        camera.storeState();
+                        camera.lockedTarget = null;
+                        camera.restoreState();
+                    }
+
+                    this.__toolingConfig = config;
+
+                }
+
+                __updateToolingDynamics(dynamics) {
+
+                    if (!this.__scene || this.__loadingTool)
+                        return;
+
+                    let mesh = this.__scene.getMeshByName("tool");
+                    if (!mesh) return;
+
+                    // translate position/rotation
+                    this.__toolingDynamics = dynamics;
+                    this.__translateMesh(
+                        mesh,
+                        {
+                            position: {
+                                x: this.__toolingConfig.positionOffset.x + dynamics.position.x,
+                                y: this.__toolingConfig.positionOffset.y + dynamics.position.y,
+                                z: this.__toolingConfig.positionOffset.z + dynamics.position.z
+                            },
+                            rotation: {
+                                x: this.__toolingConfig.rotationOffset.x + dynamics.rotation.x,
+                                y: this.__toolingConfig.rotationOffset.y + dynamics.rotation.y,
+                                z: this.__toolingConfig.rotationOffset.z + dynamics.rotation.z
+                            }
+                        }
+                    );
+
+                    if (this.__toolingConfig.trackToolPath)
+                        this.__renderToolPath(dynamics);
+                }
+
                 destroy() {
-                    /**
-                     * Ignore while __keepAlive is set to true.
-                     */
                     if (this.__keepAlive) {
                         return;
                     }
-                    super.destroy();
-
                     this.__scene?.dispose();
                     this.__engine?.dispose();
+                    super.destroy();
                 }
 
                 /// public methods
@@ -637,15 +659,15 @@ var TcHmi;
                 }
 
                 clearToolPath() {
-                    const ls = this.__scene?.getMeshByName(this.__toolPathLines.meshName);
-                    ls?.dispose();
+                    if (!this.__scene) return;
+                    this.__scene.getMeshByName(this.__toolPathLines.meshName)?.dispose();
                     this.__toolPathLines.lineSystem = null;
                     this.__toolPathLines.lines = [];
                     this.__toolPathLines.idx = 0;
                     this.__toolPathLines.prevPoint = null;
                 }
 
-                /// properties
+                /// property accessors
 
                 getSelectedSegment() {
                     return this.__selectedSegment;
@@ -719,7 +741,7 @@ var TcHmi;
                 }
 
                 setToolingDynamics(value) {
-                    this.__resolveObjectProperty('toolingDynamics', value, this.__updateTooling);
+                    this.__resolveObjectProperty('toolingDynamics', value, this.__updateToolingDynamics);
                 }
 
                 getLockCamera() {
