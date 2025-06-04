@@ -90,12 +90,17 @@ class GCodePathInterpreter {
         k = (args.k !== undefined) ? ((args.k + this.activeWorkOffset.z) * this.unitScaling) : this.prevPoint.k;
         r = (args.r !== undefined) ? args.r : undefined;
 
-        // coordinate rotation (g68)
+        // g68 coordinate rotation
         if (this.coordRotation.enabled) {
-            const rotated = this.calculateCoordRotation(x, y,
-                this.coordRotation.offset.x, this.coordRotation.offset.y, this.coordRotation.offset.r);
+            const rotated = this.calculateCoordRotation(
+                x,
+                y,
+                this.coordRotation.offset.x * this.unitScaling,
+                this.coordRotation.offset.y * this.unitScaling,
+                this.coordRotation.offset.r
+            );
 
-            // only apply transformation if arguments are supplied
+            // only apply transformation to supplied arguments
             x = (args.x) ? rotated.x : x;
             y = (args.y) ? rotated.y : y;
         }
