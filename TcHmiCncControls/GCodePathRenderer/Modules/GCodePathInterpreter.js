@@ -20,6 +20,9 @@ class GCodePathInterpreter {
         this.maxArcPoints = config.maxArcRenderingPoints || 32;
         this.workOffsets = config.workOffsets;
         this.activeWorkOffset = { x: 0.0, y: 0.0, z: 0.0 };
+        this.coordRotation = {
+            enabled: false, offset: { x: 0.0, y: 0.0, r: 0.0 }
+        };
     }
 
     // takes raw gcode string
@@ -48,8 +51,8 @@ class GCodePathInterpreter {
         return points;
     }
 
-    // processes code arguments, applies
-    // unit scaling, relative positioning, active work offset
+    // processes code arguments 
+    // applies unit scaling, relative positioning, active work offset, coord rotation
     // returns scaled { x, y, z, i, j, k, r } values
     getScaledPoint(args) {
 
@@ -59,6 +62,7 @@ class GCodePathInterpreter {
 
         let x, y, z, i, j, k, r;
 
+        // x, y, z scaling & transformations
         if (args.x === undefined) {
             x = this.prevPoint.x;
         } else {
@@ -80,10 +84,21 @@ class GCodePathInterpreter {
             z = ((this.relative) ? this.prevPoint.z + scaledZ : this.activeWorkOffset.z + scaledZ);
         }
 
+        // i, j, k scaling & transformations
         i = (args.i !== undefined) ? ((args.i + this.activeWorkOffset.x) * this.unitScaling) : this.prevPoint.i;
         j = (args.j !== undefined) ? ((args.j + this.activeWorkOffset.y) * this.unitScaling) : this.prevPoint.j;
         k = (args.k !== undefined) ? ((args.k + this.activeWorkOffset.z) * this.unitScaling) : this.prevPoint.k;
         r = (args.r !== undefined) ? args.r : undefined;
+
+        // coordinate rotation (g68)
+        if (this.coordRotation.enabled) {
+            const rotated = this.calculateCoordRotation(x, y,
+                this.coordRotation.offset.x, this.coordRotation.offset.y, this.coordRotation.offset.r);
+
+            // only apply transformation if arguments are supplied
+            x = (args.x) ? rotated.x : x;
+            y = (args.y) ? rotated.y : y;
+        }
 
         return { x: x, y: y, z: z, i: i, j: j, k: k, r: r };
     }
@@ -136,6 +151,15 @@ class GCodePathInterpreter {
     g17(args) { }
     g28(args) { }
 
+    g68(args) {
+        if (!args.r) return;
+        this.coordRotation.enabled = true;
+        this.coordRotation.offset = { x: args.x || 0.0, y: args.y || 0.0, r: args.r };
+    }
+    g69(args) {
+        this.coordRotation.enabled = false;
+    }
+
     // 1-to-1 inch units in rendering
     // CNC machines use 70 (inch) & 71 (mm) for units
     g70(args) { this.unitScaling = 1.0 }
@@ -164,6 +188,7 @@ class GCodePathInterpreter {
     g59(args) { this.activeWorkOffset = this.workOffsets.g59 }
 
     // calculate center point for radius arcs (2D only)
+    // returns vector3
     calculateCenterPoint(start, end, clockwise) {
 
         if (end.r) {
@@ -191,9 +216,27 @@ class GCodePathInterpreter {
         
     }
 
+     // rotate point (x, y) around a center (cx, cy) by angle r (degrees)
+    calculateCoordRotation(x, y, cx, cy, r) {
+
+        const radians = (r * Math.PI) / 180;
+
+        const dx = x - cx;
+        const dy = y - cy;
+
+        const xRot = dx * Math.cos(radians) - dy * Math.sin(radians);
+        const yRot = dx * Math.sin(radians) + dy * Math.cos(radians);
+
+        return {
+            x: cx + xRot,
+            y: cy + yRot
+        };
+    }
+
     // Generate points along an arc given start, end, center points
     // algorithm reference:
     // https://github.com/NCalu/NCneticNpp/blob/main/NCneticCore/FAO.cs#L101
+    // returns array[0-maxArcPoints] of vector3
     calculateArcPoints(startPoint, endPoint, centerPoint, clockwise) {
 
         const m = this.MathHelpers;
