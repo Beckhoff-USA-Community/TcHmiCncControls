@@ -67,10 +67,11 @@ var TcHmi;
                         maxArcRenderingPoints: 32,
                         workArea: {
                             visible: false,
-                            length: 24,
                             width: 24,
+                            height: 24,
                             units: "inches",
                             zoffset: -0.1,
+                            originAlignment: "Center",
                             color: null
                         },
                         workOffsets: {
@@ -406,21 +407,37 @@ var TcHmi;
                     this.__scene.getMeshByName("workArea")?.dispose();
                     if (!workArea.visible) return;
 
-                    const length = (workArea.units === "mm") ? (workArea.length / 25.4) : workArea.length;
                     const width = (workArea.units === "mm") ? (workArea.width / 25.4) : workArea.width;
+                    const height = (workArea.units === "mm") ? (workArea.height / 25.4) : workArea.height;
 
                     const mesh = BABYLON.MeshBuilder.CreatePlane(
                         "workArea",
                         {
                             width: width,
-                            height: length,
+                            height: height,
                             sideOrientation: BABYLON.Mesh.DOUBLESIDE
                         },
                     );
 
-                    // assuming origin is bottom-left of work area
-                    // TODO: parameterize?
-                    mesh.position = new BABYLON.Vector3((length / 2), (width / 2), workArea.zoffset);
+                    let align;
+                    switch (workArea.originAlignment) {
+                        case "BottomLeft":
+                            align = new BABYLON.Vector3(workArea.width / 2, workArea.height / 2, workArea.zoffset);
+                            break;
+                        case "BottomRight":
+                            align = new BABYLON.Vector3(-workArea.width / 2, workArea.height / 2, workArea.zoffset);
+                            break;
+                        case "TopLeft":
+                            align = new BABYLON.Vector3(workArea.width / 2, -workArea.height / 2, workArea.zoffset);
+                            break;
+                        case "TopRight":
+                            align = new BABYLON.Vector3(-workArea.width / 2, -workArea.height / 2, workArea.zoffset);
+                            break;
+                        default:
+                            align = new BABYLON.Vector3(0, 0, workArea.zoffset);
+                            break;
+                    }
+                    mesh.position = align;
                     if (workArea.color) {
                         mesh.color = this.__hmiColorToBablyonColor(workArea.color);
                     } else {
