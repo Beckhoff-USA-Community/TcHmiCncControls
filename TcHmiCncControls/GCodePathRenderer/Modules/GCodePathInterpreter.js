@@ -16,7 +16,7 @@ class GCodePathInterpreter {
         this.unitScaling = 1.0;
         this.relative = false;
         this.prevPoint = { x: 0, y: 0, z: 0, i: 0, j: 0, k: 0 };
-        this.ijkRelative = config.ijkRelative;
+        this.ijkRelative = config.ijkRelative || false;
         this.maxArcPoints = config.maxArcRenderingPoints || 32;
         this.workOffsets = config.workOffsets;
         this.activeWorkOffset = { x: 0.0, y: 0.0, z: 0.0 };
@@ -52,8 +52,8 @@ class GCodePathInterpreter {
     }
 
     // processes code arguments 
-    // applies unit scaling, relative positioning, active work offset, coord rotation
-    // returns scaled { x, y, z, i, j, k, r } values
+    // applies unit scaling, relative positioning, active work offset
+    // returns scaled gcode argument { x, y, z, i, j, k, r } values
     getScaledPoint(args) {
 
         if (args.x === undefined && args.y === undefined && args.z === undefined) {
@@ -90,22 +90,49 @@ class GCodePathInterpreter {
         k = (args.k !== undefined) ? ((args.k + this.activeWorkOffset.z) * this.unitScaling) : this.prevPoint.k;
         r = (args.r !== undefined) ? args.r : undefined;
 
-        // g68 coordinate rotation
-        if (this.coordRotation.enabled) {
-            const rotated = this.calculateCoordRotation(
-                x,
-                y,
-                this.coordRotation.offset.x * this.unitScaling,
-                this.coordRotation.offset.y * this.unitScaling,
-                this.coordRotation.offset.r
-            );
+        return { x: x, y: y, z: z, i: i, j: j, k: k, r: r };
+    }
 
-            // only apply transformation to supplied arguments
-            x = (args.x) ? rotated.x : x;
-            y = (args.y) ? rotated.y : y;
+    // generates path points from gcode type and args
+    // returns array of Vector3
+    getPathPoints(args, isArc, clockwise) {
+
+        // get scaled destination point
+        const dest = this.getScaledPoint(args);
+        if (!dest) return;
+        let points = [];
+
+        // calculate intermediate path points
+        if (isArc && clockwise != undefined) {
+            const center = this.calculateCenterPoint(this.prevPoint, dest, clockwise, this.ijkRelative);
+            points = this.calculateArcPoints(
+                this.prevPoint,
+                dest,
+                center,
+                clockwise
+            );
+        } else {
+            points = [this.prevPoint, dest];
         }
 
-        return { x: x, y: y, z: z, i: i, j: j, k: k, r: r };
+        this.prevPoint = dest;
+
+        // apply g68 coord rotation
+        if (this.coordRotation.enabled) {
+            const t = this;
+            points = points.map(p => {
+                const rotated = t.calculateCoordRotation(
+                    p.x,
+                    p.y,
+                    t.coordRotation.offset.x,
+                    t.coordRotation.offset.y,
+                    t.coordRotation.offset.r
+                );
+                return { ...p, x: rotated.x, y: rotated.y };
+            });
+        }
+
+        return points;
     }
 
     g0(args) { return this.g00(args) }
@@ -115,42 +142,17 @@ class GCodePathInterpreter {
 
     g1(args) { return this.g01(args) }
     g01(args) {
-        const dest = this.getScaledPoint(args);
-        if (dest) {
-            const ret = [this.prevPoint, dest];
-            this.prevPoint = dest;
-            return ret;
-        }
+        return this.getPathPoints(args, false);
     }
 
     g2(args) { return this.g02(args) }
     g02(args) {
-        const dest = this.getScaledPoint(args);
-        const center = this.calculateCenterPoint(this.prevPoint, dest, true);
-        const points = this.calculateArcPoints(
-            this.prevPoint,
-            dest,
-            center,
-            true
-        );
-
-        this.prevPoint = dest;
-        return points;
+        return this.getPathPoints(args, true, true);
     }
 
     g3(args) { return this.g03(args) }
     g03(args) {
-        const dest = this.getScaledPoint(args);
-        const center = this.calculateCenterPoint(this.prevPoint, dest, false);
-        const points = this.calculateArcPoints(
-            this.prevPoint,
-            dest,
-            center,
-            false
-        );
-
-        this.prevPoint = dest;
-        return points;
+        return this.getPathPoints(args, true, false);
     }
 
     g17(args) { }
@@ -194,7 +196,7 @@ class GCodePathInterpreter {
 
     // calculate center point for radius arcs (2D only)
     // returns vector3
-    calculateCenterPoint(start, end, clockwise) {
+    calculateCenterPoint(start, end, clockwise, ijkRelative) {
 
         if (end.r) {
             const midpoint = {
@@ -212,7 +214,7 @@ class GCodePathInterpreter {
                 z: start.z
             };
         } else {
-            if (this.ijkRelative) {
+            if (ijkRelative) {
                 return { x: start.x + end.i, y: start.y + end.j, z: start.z + end.k };
             } else {
                 return { x: end.i, y: end.j, z: end.k };
@@ -232,16 +234,19 @@ class GCodePathInterpreter {
         const xRot = dx * Math.cos(radians) - dy * Math.sin(radians);
         const yRot = dx * Math.sin(radians) + dy * Math.cos(radians);
 
+        const offsetX = cx + xRot;
+        const offsetY = cy + yRot;
+
         return {
-            x: cx + xRot,
-            y: cy + yRot
+            x: offsetX,
+            y: offsetY
         };
     }
 
     // Generate points along an arc given start, end, center points
     // algorithm reference:
     // https://github.com/NCalu/NCneticNpp/blob/main/NCneticCore/FAO.cs#L101
-    // returns array[0-maxArcPoints] of vector3
+    // returns array[maxArcPoints] of vector3
     calculateArcPoints(startPoint, endPoint, centerPoint, clockwise) {
 
         const m = this.MathHelpers;

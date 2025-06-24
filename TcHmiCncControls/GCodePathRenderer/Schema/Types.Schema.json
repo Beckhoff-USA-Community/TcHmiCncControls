@@ -279,14 +279,24 @@
         "color": {
           "$ref": "tchmi:framework#/definitions/SolidColor"
         },
-        "length": {
+        "width": {
           "type": "number"
         },
-        "width": {
+        "height": {
           "type": "number"
         },
         "zoffset": {
           "type": "number"
+        },
+        "originAlignment": {
+          "type": "string",
+          "enum": [
+            "Center",
+            "BottomLeft",
+            "BottomRight",
+            "TopLeft",
+            "TopRight"
+          ]
         },
         "units": {
           "type": "string",
@@ -310,36 +320,44 @@
           "defaultValueInternal": null
         },
         {
-          "name": "length",
-          "displayName": "Length",
-          "description": "Work area length",
+          "name": "width",
+          "displayName": "Width",
+          "description": "Work area width",
           "displayPriority": 2,
           "defaultValue": 24,
           "defaultValueInternal": 24
         },
         {
-          "name": "width",
-          "displayName": "Width",
-          "description": "Work area width",
+          "name": "height",
+          "displayName": "Height",
+          "description": "Work area height",
           "displayPriority": 3,
           "defaultValue": 24,
           "defaultValueInternal": 24
         },
         {
-          "name": "units",
-          "displayName": "Units",
-          "description": "Work area dimension units",
-          "displayPriority": 4,
-          "defaultValue": "inches",
-          "defaultValueInternal": "inches"
-        },
-        {
           "name": "zoffset",
           "displayName": "Z Offset",
           "description": "Work area Z position offset",
-          "displayPriority": 5,
+          "displayPriority": 4,
           "defaultValue": -0.1,
           "defaultValueInternal": -0.1
+        },
+        {
+          "name": "originAlignment",
+          "displayName": "Origin Alignment",
+          "description": "Work area alignment with origin",
+          "displayPriority": 5,
+          "defaultValue": "Center",
+          "defaultValueInternal": "Center"
+        },
+        {
+          "name": "units",
+          "displayName": "Units",
+          "description": "Work area dimension units",
+          "displayPriority": 6,
+          "defaultValue": "inches",
+          "defaultValueInternal": "inches"
         }
       ]
     },
