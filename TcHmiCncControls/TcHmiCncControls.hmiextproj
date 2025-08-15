@@ -19,7 +19,7 @@
     <ProjectName>TcHmiCncControls</ProjectName>
     <Name>TcHmiCncControls</Name>
     <HmiInitial>1.12.760.59</HmiInitial>
-    <HmiRecent>14.3.291.1</HmiRecent>
+    <HmiRecent>14.3.337.1</HmiRecent>
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
   </PropertyGroup>
@@ -137,6 +137,9 @@
       <SubType>Content</SubType>
     </Content>
     <Content Include="GCodePathRenderer\tests\GCodeParser.test.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="GCodePathRenderer\tests\GCodePathInterpreter.test.js">
       <SubType>Content</SubType>
     </Content>
     <Content Include="GCodePathRenderer\Themes\Base-Dark\Style.css">
