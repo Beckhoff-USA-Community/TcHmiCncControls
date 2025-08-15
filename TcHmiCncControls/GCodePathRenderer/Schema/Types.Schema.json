@@ -13,7 +13,7 @@
         "ijkRelative": {
           "type": "boolean"
         },
-        "maxArcRenderPoints": {
+        "arcSegmentCount": {
           "type": "integer"
         },
         "workArea": {
@@ -83,10 +83,10 @@
           "defaultValueInternal": true
         },
         {
-          "name": "maxArcRenderPoints",
-          "displayName": "Max Arc Render Points",
+          "name": "arcSegmentCount",
+          "displayName": "Arc Segment Count",
           "displayPriority": 2,
-          "description": "Max number of points used for arc interpolation (rendering only).",
+          "description": "Number of line segments to used for arc interpolation rendering.",
           "defaultValue": 32,
           "defaultValueInternal": 32
         },
