@@ -301,7 +301,7 @@ var TcHmi;
                     // get active camera
                     const camera = this.__scene.activeCamera;
 
-                    const bounds = mesh.getBoundingInfo();
+                    const bounds = mesh.getBoundingInfo().boundingBox;
                     var framingBehavior = new BABYLON.FramingBehavior();
                     framingBehavior.framingTime = 750;
                     framingBehavior.radiusScale = 0.7;
@@ -310,7 +310,7 @@ var TcHmi;
                     framingBehavior.attach(camera);
 
                     // zoom to appropriate bounds and normal to Z axis
-                    framingBehavior.zoomOnBoundingInfo(bounds.maximum, bounds.minimum, false, () => {
+                    framingBehavior.zoomOnBoundingInfo(bounds.maximumWorld, bounds.minimumWorld, false, () => {
                         camera.alpha = Math.PI / 2;
                         camera.beta = Math.PI / 2;
                         framingBehavior.detach();
@@ -514,10 +514,20 @@ var TcHmi;
                             m = BABYLON.MeshBuilder.CreateCylinder("tool", { diameter: 0.1, height: 0.5 });
                         }
 
-                        this.__translateMesh(m,
+                        const dynamics = this.__toolingDynamics;
+                        this.__translateMesh(
+                            m,
                             {
-                                position: config.positionOffset,
-                                rotation: config.rotationOffset,
+                                position: {
+                                    x: config.positionOffset.x + dynamics.position.x,
+                                    y: config.positionOffset.y + dynamics.position.y,
+                                    z: config.positionOffset.z + dynamics.position.z
+                                },
+                                rotation: {
+                                    x: config.rotationOffset.x + dynamics.rotation.x,
+                                    y: config.rotationOffset.y + dynamics.rotation.y,
+                                    z: config.rotationOffset.z + dynamics.rotation.z
+                                },
                                 scaling: config.scaling
                             }
                         );
@@ -531,7 +541,10 @@ var TcHmi;
                     if (!mesh || !translation) return;
                     const mult = (this.__toolingConfig.rotationUnit === "Degrees") ? Math.PI / 180 : 1;
                     mesh.position = new BABYLON.Vector3(translation.position.x, translation.position.y, translation.position.z);
-                    mesh.rotation = new BABYLON.Vector3(translation.rotation.x * mult, translation.rotation.y * mult, translation.rotation.z * mult);
+                    mesh.rotation = new BABYLON.Vector3(0, 0, 0);
+                    mesh.rotate(BABYLON.Axis.X, translation.rotation.x * mult, BABYLON.Space.WORLD);
+                    mesh.rotate(BABYLON.Axis.Y, translation.rotation.y * mult, BABYLON.Space.WORLD);
+                    mesh.rotate(BABYLON.Axis.Z, translation.rotation.z * mult, BABYLON.Space.WORLD);
                     if (translation.scaling) {
                         mesh.scaling = new BABYLON.Vector3(translation.scaling.x, translation.scaling.y, translation.scaling.z);
                     }
@@ -593,10 +606,16 @@ var TcHmi;
 
                 async __updateToolingConfig(config) {
 
-                    if (config.modelFilePath !== this.__toolingConfig.modelFilePath) {
+                    // change detection
+                    const prevModelFilePath = this.__toolingConfig.modelFilePath;
+                    const prevTrackToolPath = this.__toolingConfig.trackToolPath;
+
+                    this.__toolingConfig = config;
+
+                    if (config.modelFilePath !== prevModelFilePath) {
                         await this.__loadToolingModel(config);
                     }
-                    if (config.trackToolPath !== this.__toolingConfig.trackToolPath) {
+                    if (config.trackToolPath !== prevTrackToolPath) {
                         const ls = this.__scene?.getMeshByName(this.__toolPathLines.meshName);
                         if (ls) ls.visibility = config.trackToolPath;
                     }
@@ -611,12 +630,11 @@ var TcHmi;
                         camera.lockedTarget = null;
                         camera.restoreState();
                     }
-
-                    this.__toolingConfig = config;
-
                 }
 
                 __updateToolingDynamics(dynamics) {
+
+                    this.__toolingDynamics = dynamics;
 
                     if (!this.__scene || this.__loadingTool)
                         return;
@@ -625,7 +643,6 @@ var TcHmi;
                     if (!mesh) return;
 
                     // translate position/rotation
-                    this.__toolingDynamics = dynamics;
                     this.__translateMesh(
                         mesh,
                         {
