@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.34729.46
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36705.20 d17.14
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{3B740506-4966-4147-AB1F-357FE08946EA}") = "TcHmiCncControls", "TcHmiCncControls\TcHmiCncControls.hmiextproj", "{183F8F26-ECA7-4A57-8F67-CE529A299577}"
 EndProject
