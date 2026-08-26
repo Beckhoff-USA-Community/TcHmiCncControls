@@ -145,7 +145,7 @@ class GCodePathInterpreter {
         // apply g68 coord rotation
         if (this.coordRotation.enabled) {
             points = points.map(p => {
-                const rotated = t.calculateCoordRotation(
+                const rotated = this.calculateCoordRotation(
                     p.x,
                     p.y,
                     this.coordRotation.offset.x + this.activeWorkOffset.x,
