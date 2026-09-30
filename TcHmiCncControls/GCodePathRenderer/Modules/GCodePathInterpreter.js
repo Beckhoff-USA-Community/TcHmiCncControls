@@ -2,9 +2,11 @@
 /// <reference path="./../../../Packages/Beckhoff.TwinCAT.HMI.Framework.12.760.59/runtimes/native1.12-tchmi/TcHmi.d.ts" />
 
 class GCodeInterpreterConfig {
-    constructor(ijkRelative, arcSegmentCount, workOffsets) {
+    constructor(ijkRelative, arcSegmentCount, workOffsets, arcTolerance) {
         this.ijkRelative = ijkRelative || false;
         this.arcSegmentCount = arcSegmentCount || 32;
+        // max chord deviation (inches) for adaptive arc segmentation; <= 0 disables
+        this.arcTolerance = arcTolerance ?? 0.001;
         this.workOffsets = {
             g54: workOffsets?.g54 || { x: 0.0, y: 0.0, z: 0.0 },
             g55: workOffsets?.g55 || { x: 0.0, y: 0.0, z: 0.0 },
@@ -45,6 +47,7 @@ class GCodePathInterpreter {
         // config
         this.ijkRelative = config.ijkRelative;
         this.arcSegmentCount = config.arcSegmentCount;
+        this.arcTolerance = config.arcTolerance;
         this.workOffsets = config.workOffsets;   
     }
 
@@ -133,7 +136,8 @@ class GCodePathInterpreter {
                 dest,
                 center,
                 clockwise,
-                this.arcSegmentCount
+                this.calculateArcSegmentCount(this.prevPoint, dest, center, clockwise, this.workingPlane),
+                this.workingPlane
             );
         } else {
             // straight line
@@ -266,11 +270,9 @@ class GCodePathInterpreter {
         };
     }
 
-    // Generate points along an arc given start, end, center points
-    // returns array[segmentCount + 1] of vector3
-    calculateArcPoints(startPoint, endPoint, centerPoint, isClockwise, segmentCount, plane = WorkingPlane.XY) {
-
-        let points = [];
+    // radius and start/end angles of an arc in the given working plane
+    // returns { sx, sy, ex, ey, cx, cy, radius, a0, a1 } (2D plane coords)
+    calculateArcAngles(startPoint, endPoint, centerPoint, isClockwise, plane = WorkingPlane.XY) {
 
         const planeMap = {
             [WorkingPlane.XY]: [startPoint.x, startPoint.y, endPoint.x, endPoint.y, centerPoint.x, centerPoint.y],
@@ -280,6 +282,10 @@ class GCodePathInterpreter {
 
         const [sx, sy, ex, ey, cx, cy] = planeMap[plane];
 
+        // XZ coords are mapped (x, z), but the G18 plane is right-handed as (z, x) - viewed from +Y
+        // the rotation direction is mirrored in (x, z) space
+        if (plane === WorkingPlane.XZ) isClockwise = !isClockwise;
+
         const radius = Math.sqrt((sx - cx) * (sx - cx) + (sy - cy) * (sy - cy));
         let a0 = Math.atan2(sy - cy, sx - cx);
         let a1 = Math.atan2(ey - cy, ex - cx);
@@ -287,6 +293,33 @@ class GCodePathInterpreter {
         // Adjust angle direction for CW/CCW
         if (isClockwise && a1 > a0) a1 -= 2 * Math.PI;
         if (!isClockwise && a1 < a0) a1 += 2 * Math.PI;
+
+        return { sx, sy, ex, ey, cx, cy, radius, a0, a1 };
+    }
+
+    // number of segments needed to keep the chord deviation from the true arc within arcTolerance
+    // capped at arcSegmentCount; returns arcSegmentCount if tolerance is disabled
+    calculateArcSegmentCount(startPoint, endPoint, centerPoint, isClockwise, plane = WorkingPlane.XY) {
+
+        if (!(this.arcTolerance > 0)) return this.arcSegmentCount;
+
+        const { radius, a0, a1 } = this.calculateArcAngles(startPoint, endPoint, centerPoint, isClockwise, plane);
+
+        // max angle per segment: sagitta = r * (1 - cos(step / 2)) <= tolerance
+        const maxStep = 2 * Math.acos(1 - Math.min(this.arcTolerance / radius, 1));
+        const segments = Math.ceil(Math.abs(a1 - a0) / maxStep);
+
+        if (!Number.isFinite(segments)) return this.arcSegmentCount;
+        return Math.max(1, Math.min(segments, this.arcSegmentCount));
+    }
+
+    // Generate points along an arc given start, end, center points
+    // returns array[segmentCount + 1] of vector3
+    calculateArcPoints(startPoint, endPoint, centerPoint, isClockwise, segmentCount, plane = WorkingPlane.XY) {
+
+        let points = [];
+
+        const { cx, cy, radius, a0, a1 } = this.calculateArcAngles(startPoint, endPoint, centerPoint, isClockwise, plane);
 
         const step = (a1 - a0) / segmentCount;
 
@@ -304,7 +337,7 @@ class GCodePathInterpreter {
                     case WorkingPlane.XZ:
                         return { x: px, y: startPoint.y + (endPoint.y - startPoint.y) * i / segmentCount, z: py };
                     case WorkingPlane.YZ:
-                        return { x: startPoint.X + (endPoint.x - startPoint.x) * i / segmentCount, y: px, z: py };
+                        return { x: startPoint.x + (endPoint.x - startPoint.x) * i / segmentCount, y: px, z: py };
                 }
             })();
 

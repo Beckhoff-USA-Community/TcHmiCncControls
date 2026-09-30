@@ -16,6 +16,9 @@
         "arcSegmentCount": {
           "type": "integer"
         },
+        "arcTolerance": {
+          "type": "number"
+        },
         "workArea": {
           "$ref": "tchmi:framework#/definitions/WorkAreaConfig"
         },
@@ -86,9 +89,17 @@
           "name": "arcSegmentCount",
           "displayName": "Arc Segment Count",
           "displayPriority": 2,
-          "description": "Number of line segments to used for arc interpolation rendering.",
+          "description": "Maximum number of line segments used for arc interpolation rendering.",
           "defaultValue": 32,
           "defaultValueInternal": 32
+        },
+        {
+          "name": "arcTolerance",
+          "displayName": "Arc Tolerance",
+          "displayPriority": 2,
+          "description": "Maximum deviation (inches) of arc interpolation segments from the true arc. Segment count adapts to each arc's size, limited to Arc Segment Count. 0 always uses Arc Segment Count.",
+          "defaultValue": 0.001,
+          "defaultValueInternal": 0.001
         },
         {
           "name": "workArea",

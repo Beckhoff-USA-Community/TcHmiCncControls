@@ -45,13 +45,19 @@ var TcHmi;
 
                     // line data for path rendering
                     this.__progressLines = {
-                        lines: [],
-                        colors: [],
-                        ids: [],
+                        ids: null,              // gcode line number per path (ascending)
+                        vertexStarts: null,     // first vertex index per path (+ total vertex count)
+                        segmentIds: null,       // gcode line number per line segment (pick face id)
+                        baseColors: null,       // original vertex colors
+                        liveColors: null,       // vertex colors currently in the vertex buffer
+                        tracedVertexCount: 0,   // vertices currently in program trace color
+                        traceColor: null,       // program trace color currently applied
                         meshName: "progressLines",
-                        faceIdMap: null,
                         lineSystem: null
                     };
+
+                    // pointer position at pointer down (for click vs. drag detection)
+                    this.__pointerDownPos = null;
 
                     // line data for tool path tracing
                     this.__toolPathLines = {
@@ -198,28 +204,69 @@ var TcHmi;
                             scene.render();
                         });
 
+                        // disable babylon's automatic picking on every pointer event
+                        // picking the path line system is expensive, so picks are done explicitly below
+                        scene.skipPointerDownPicking = true;
+                        scene.skipPointerUpPicking = true;
+                        scene.skipPointerMovePicking = true;
+
                         // mouse events
                         scene.onPointerObservable.add((pointerInfo) => {
                             switch (pointerInfo.type) {
-                                case BABYLON.PointerEventTypes.POINTERDOWN:
+                                case BABYLON.PointerEventTypes.POINTERDOWN: {
                                     // ignore right-click
                                     if (pointerInfo.event.inputIndex === 4) return;
-                                    if (!pointerInfo.pickInfo.hit) return;
+
+                                    // additional touch points (pinch zoom etc.) cancel any pending tap
+                                    if (pointerInfo.event.isPrimary === false) {
+                                        this.__pointerDownPos = null;
+                                        return;
+                                    }
+                                    this.__pointerDownPos = { x: scene.pointerX, y: scene.pointerY };
+
+                                    // outside selection zoom, segments are picked on click release (see POINTERUP)
+                                    if (!this.__selectionZoom && !this.__selectionZoomData.drag) return;
+                                    this.__pointerDownPos = null;
+
+                                    const pickInfo = scene.pick(scene.pointerX, scene.pointerY);
+                                    if (!pickInfo.hit) return;
 
                                     if (!this.__selectionZoomData.drag) {
                                         // line segment click
-                                        if (pointerInfo.pickInfo.pickedMesh.id === this.__progressLines.meshName) {
-                                            this.__onMeshPicked(pointerInfo.pickInfo);
+                                        if (pickInfo.pickedMesh.id === this.__progressLines.meshName) {
+                                            this.__onMeshPicked(pickInfo);
                                         } else {
-                                            if (!this.__selectionZoom) return;
-                                            this.__onSelectionZoomStart(pointerInfo.pickInfo);
+                                            this.__onSelectionZoomStart(pickInfo);
                                         }
                                     } else this.__onSelectionZoomEnd();
                                     break;
+                                }
+
+                                case BABYLON.PointerEventTypes.POINTERUP: {
+                                    const down = this.__pointerDownPos;
+                                    this.__pointerDownPos = null;
+                                    if (!down || pointerInfo.event.inputIndex === 4) return;
+
+                                    // ignore camera drags (same threshold babylon uses for click vs. drag)
+                                    const maxClickDistance = BABYLON.Scene.DragMovementThreshold;
+                                    if (Math.abs(scene.pointerX - down.x) > maxClickDistance ||
+                                        Math.abs(scene.pointerY - down.y) > maxClickDistance) return;
+
+                                    // line segment click
+                                    const ls = this.__progressLines.lineSystem;
+                                    if (!ls) return;
+                                    const pickInfo = scene.pick(scene.pointerX, scene.pointerY, m => m === ls);
+                                    if (pickInfo.hit) this.__onMeshPicked(pickInfo);
+                                    break;
+                                }
 
                                 case BABYLON.PointerEventTypes.POINTERMOVE:
-                                    if (this.__selectionZoom && this.__selectionZoomData.drag)
-                                        this.__onSelectionZoomDrag(scene.pick(scene.pointerX, scene.pointerY));
+                                    if (this.__selectionZoom && this.__selectionZoomData.drag) {
+                                        // exclude path line system from drag picks (expensive)
+                                        const ls = this.__progressLines.lineSystem;
+                                        this.__onSelectionZoomDrag(scene.pick(scene.pointerX, scene.pointerY,
+                                            m => m.isPickable && m.isVisible && m.isEnabled() && m !== ls));
+                                    }
                                     break;
 
                                 default:
@@ -284,7 +331,7 @@ var TcHmi;
                 __onMeshPicked(pickInfo) {
 
                     // get selected segment
-                    const id = this.__progressLines.faceIdMap.get(pickInfo.subMeshFaceId);
+                    const id = this.__progressLines.segmentIds[pickInfo.subMeshFaceId];
                     this.__selectedSegment = id;
 
                     // set and raise control property change event
@@ -334,25 +381,26 @@ var TcHmi;
                     // parse gcode and trace path
                     const interpreter = new GCodePathInterpreter(this.__interpreterConfig);
                     const paths = interpreter.Trace(gcode);
-                    const parent = this;
 
                     // generate line and color arrays for line system
+                    // line system vertices are laid out path by path, one vertex per point
                     const lines = [];
                     const colors = [];
                     const ids = [];
-                    const faceIdMap = new Map();
-                    let faceId = 0;
-                    paths.forEach((p, i) => {
+                    const vertexStarts = [0];
+                    const segmentIds = [];
+                    let vertexCount = 0;
+                    paths.forEach(p => {
                         if (this.__hideG0Lines && p.code === "g00") return;
-                        const l = p.points.map((x, j) => {
-                            if (j > 0) faceIdMap.set(faceId++, p.id);
-                            return new BABYLON.Vector3(x.x, x.y, x.z)
-                        });
-                        const c = p.points.map(_ => parent.__lineColors[p.code]);
+                        const color = this.__lineColors[p.code];
 
-                        lines.push(l);
-                        colors.push(c);
+                        lines.push(p.points.map(x => new BABYLON.Vector3(x.x, x.y, x.z)));
+                        colors.push(p.points.map(_ => color));
                         ids.push(p.id);
+
+                        for (let j = 1; j < p.points.length; j++) segmentIds.push(p.id);
+                        vertexCount += p.points.length;
+                        vertexStarts.push(vertexCount);
                     });
 
                     // clean up / create line system
@@ -370,12 +418,21 @@ var TcHmi;
                     // set pick threshhold (higher value = easier to click select segments)
                     ls.intersectionThreshold = 0.05;
 
+                    // keep vertex colors in typed arrays so progress updates only touch changed ranges
+                    const baseColors = Float32Array.from(ls.getVerticesData(BABYLON.VertexBuffer.ColorKind) || []);
+                    const liveColors = baseColors.slice();
+                    if (liveColors.length) ls.setVerticesData(BABYLON.VertexBuffer.ColorKind, liveColors, true);
+
                     // store line data in control state
-                    this.__progressLines.lineSystem = ls;
-                    this.__progressLines.lines = lines;
-                    this.__progressLines.colors = colors;
-                    this.__progressLines.ids = ids;
-                    this.__progressLines.faceIdMap = faceIdMap;
+                    const ld = this.__progressLines;
+                    ld.lineSystem = ls;
+                    ld.ids = Uint32Array.from(ids);
+                    ld.vertexStarts = Uint32Array.from(vertexStarts);
+                    ld.segmentIds = Uint32Array.from(segmentIds);
+                    ld.baseColors = baseColors;
+                    ld.liveColors = liveColors;
+                    ld.tracedVertexCount = 0;
+                    ld.traceColor = null;
 
                     // set view
                     this.__focusMesh(ls);
@@ -383,6 +440,7 @@ var TcHmi;
 
                     // create (invisible) ground mesh based on bounds of path mesh
                     // a background mesh is required to get pick points for selection zoom
+                    this.__scene.getMeshByName("zoomBg")?.dispose();
                     const bounds = ls.getBoundingInfo();
                     const bg = BABYLON.MeshBuilder.CreatePlane(
                         "zoomBg",
@@ -443,31 +501,48 @@ var TcHmi;
                 __updateProgress(id) {
 
                     const ld = this.__progressLines;
-                    if (!ld.colors || !ld.lineSystem) return;
+                    if (!ld.liveColors?.length || !ld.lineSystem) return;
 
-                    // set all line segments below selected segment to program trace color
-                    let traced = [];
-                    for (let i = 0; i < ld.colors.length; i++) {
-                        traced.push(ld.colors[i].slice());
-                        if (ld.ids[i] <= id) {
-                            ld.colors[i].forEach((_, j) =>
-                                traced[i][j] = this.__lineColors.programTrace);
-                        } else {
-                            ld.colors[i].forEach((_, j) =>
-                                traced[i][j] = ld.colors[i][j]);
-                        }
+                    // all paths at or below selected line are traced - binary search (ids are ascending)
+                    let lo = 0, hi = ld.ids.length;
+                    while (lo < hi) {
+                        const mid = (lo + hi) >>> 1;
+                        if (ld.ids[mid] <= id) lo = mid + 1;
+                        else hi = mid;
+                    }
+                    const traced = ld.vertexStarts[lo];
+                    const prevTraced = ld.tracedVertexCount;
+
+                    // repaint the whole traced range if the trace color changed
+                    const traceColor = this.__lineColors.programTrace;
+                    const paintFrom = (traceColor === ld.traceColor) ? prevTraced : 0;
+
+                    // only update vertices whose color changed
+                    const start = Math.min(paintFrom, traced);
+                    const end = Math.max(prevTraced, traced);
+                    if (start >= end) return;
+
+                    const c = ld.liveColors;
+                    for (let i = paintFrom * 4; i < traced * 4; i += 4) {
+                        c[i] = traceColor.r;
+                        c[i + 1] = traceColor.g;
+                        c[i + 2] = traceColor.b;
+                        c[i + 3] = traceColor.a;
+                    }
+                    if (prevTraced > traced) {
+                        c.set(ld.baseColors.subarray(traced * 4, prevTraced * 4), traced * 4);
                     }
 
-                    // update line system
-                    ld.lineSystem = BABYLON.MeshBuilder.CreateLineSystem(
-                        ld.meshName,
-                        {
-                            lines: ld.lines,
-                            colors: traced,
-                            instance: ld.lineSystem,
-                            updatable: true
-                        }
+                    // upload changed range to the GPU
+                    const vb = ld.lineSystem.getVertexBuffer(BABYLON.VertexBuffer.ColorKind);
+                    this.__engine.updateDynamicVertexBuffer(
+                        vb.getBuffer(),
+                        c.subarray(start * 4, end * 4),
+                        start * 4 * Float32Array.BYTES_PER_ELEMENT
                     );
+
+                    ld.tracedVertexCount = traced;
+                    ld.traceColor = traceColor;
                 }
 
                 __renderToolPath(dynamics) {
@@ -738,7 +813,7 @@ var TcHmi;
                 }
 
                 setCncConfig(value) {
-                    this.__interpreterConfig = new GCodeInterpreterConfig(value.ijkRelative, value.arcSegmentCount, value.workOffsets);
+                    this.__interpreterConfig = new GCodeInterpreterConfig(value.ijkRelative, value.arcSegmentCount, value.workOffsets, value.arcTolerance);
 
                     if (value.workArea) {
                         this.__workArea = new WorkAreaConfig(
