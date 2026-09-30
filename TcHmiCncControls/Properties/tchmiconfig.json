@@ -1,5 +1,5 @@
 {
-  "$schema": "./../../Packages/Beckhoff.TwinCAT.HMI.Framework.14.3.360/runtimes/native1.12-tchmi/Schema/TchmiConfig.Schema.json",
+  "$schema": "./../../Packages/Beckhoff.TwinCAT.HMI.Framework.14.5.1/runtimes/native1.12-tchmi/Schema/TchmiConfig.Schema.json",
   "basePath": "./Beckhoff.TwinCAT.HMI.Framework",
   "scaleMode": "None",
   "startupView": null,
@@ -52,16 +52,6 @@
   },
   "dependencyFiles": [
     {
-      "name": "GCodeEditor/GCodeEditor.js",
-      "description": "",
-      "type": "JavaScript"
-    },
-    {
-      "name": "GCodeEditor/lib/ace/ace.js",
-      "description": "",
-      "type": "JavaScript"
-    },
-    {
       "name": "GCodeEditor/lib/ace/ext-searchbox.js",
       "description": "",
       "type": "JavaScript"
@@ -80,161 +70,6 @@
       "name": "GCodeEditor/lib/ace/theme-monokai.js",
       "description": "",
       "type": "JavaScript"
-    },
-    {
-      "name": "GCodePathRenderer/GCodePathRenderer.js",
-      "description": "",
-      "type": "JavaScript"
-    },
-    {
-      "name": "GCodePathRenderer/lib/babylonjs/babylon.js",
-      "description": "",
-      "type": "JavaScript"
-    },
-    {
-      "name": "GCodePathRenderer/Modules/GCodeParser.js",
-      "description": "",
-      "type": "JavaScript"
-    },
-    {
-      "name": "GCodePathRenderer/Modules/GCodePathInterpreter.js",
-      "description": "",
-      "type": "JavaScript"
-    },
-    {
-      "name": "GCodePathRenderer/lib/babylonjs/babylonjs.loaders.min.js",
-      "description": "",
-      "type": "JavaScript"
-    },
-    {
-      "name": "GCodeEditor/Style.css",
-      "description": "",
-      "type": "Stylesheet"
-    },
-    {
-      "name": "GCodeEditor/Themes/Base-Dark/Style.css",
-      "description": "",
-      "type": "Stylesheet"
-    },
-    {
-      "name": "GCodeEditor/Themes/Base/Style.css",
-      "description": "",
-      "type": "Stylesheet"
-    },
-    {
-      "name": "GCodePathRenderer/Style.css",
-      "description": "",
-      "type": "Stylesheet"
-    },
-    {
-      "name": "GCodePathRenderer/Themes/Base-Dark/Style.css",
-      "description": "",
-      "type": "Stylesheet"
-    },
-    {
-      "name": "GCodePathRenderer/Themes/Base/Style.css",
-      "description": "",
-      "type": "Stylesheet"
-    },
-    {
-      "name": "Fonts/Fonts.css",
-      "description": "",
-      "type": "Stylesheet"
-    },
-    {
-      "name": "GCodePathRenderer/tests/GCodeParser.test.js",
-      "description": "",
-      "type": "JavaScript"
-    },
-    {
-      "name": "GCodePathRenderer/tests/GCodePathInterpreter.test.js",
-      "description": "",
-      "type": "JavaScript"
-    },
-    {
-      "name": "GCodeEditor/GCodeEditor.js",
-      "description": "",
-      "type": "JavaScript"
-    },
-    {
-      "name": "GCodeEditor/lib/ace/ace.js",
-      "description": "",
-      "type": "JavaScript"
-    },
-    {
-      "name": "GCodeEditor/lib/ace/ext-searchbox.js",
-      "description": "",
-      "type": "JavaScript"
-    },
-    {
-      "name": "GCodeEditor/lib/ace/mode-gcode.js",
-      "description": "",
-      "type": "JavaScript"
-    },
-    {
-      "name": "GCodeEditor/lib/ace/theme-clouds.js",
-      "description": "",
-      "type": "JavaScript"
-    },
-    {
-      "name": "GCodeEditor/lib/ace/theme-monokai.js",
-      "description": "",
-      "type": "JavaScript"
-    },
-    {
-      "name": "GCodePathRenderer/GCodePathRenderer.js",
-      "description": "",
-      "type": "JavaScript"
-    },
-    {
-      "name": "GCodePathRenderer/lib/babylonjs/babylon.js",
-      "description": "",
-      "type": "JavaScript"
-    },
-    {
-      "name": "GCodePathRenderer/Modules/GCodeParser.js",
-      "description": "",
-      "type": "JavaScript"
-    },
-    {
-      "name": "GCodePathRenderer/Modules/GCodePathInterpreter.js",
-      "description": "",
-      "type": "JavaScript"
-    },
-    {
-      "name": "GCodePathRenderer/lib/babylonjs/babylonjs.loaders.min.js",
-      "description": "",
-      "type": "JavaScript"
-    },
-    {
-      "name": "GCodeEditor/Style.css",
-      "description": "",
-      "type": "Stylesheet"
-    },
-    {
-      "name": "GCodeEditor/Themes/Base-Dark/Style.css",
-      "description": "",
-      "type": "Stylesheet"
-    },
-    {
-      "name": "GCodeEditor/Themes/Base/Style.css",
-      "description": "",
-      "type": "Stylesheet"
-    },
-    {
-      "name": "GCodePathRenderer/Style.css",
-      "description": "",
-      "type": "Stylesheet"
-    },
-    {
-      "name": "GCodePathRenderer/Themes/Base-Dark/Style.css",
-      "description": "",
-      "type": "Stylesheet"
-    },
-    {
-      "name": "GCodePathRenderer/Themes/Base/Style.css",
-      "description": "",
-      "type": "Stylesheet"
     },
     {
       "name": "Fonts/Fonts.css",
@@ -255,13 +90,11 @@
   "userControls": [],
   "controls": [
     {
-      "type": "Control",
       "basePath": "./GCodeEditor",
       "descriptionFile": "Description.json",
       "toolboxCategory": ""
     },
     {
-      "type": "Control",
       "basePath": "./GCodePathRenderer",
       "descriptionFile": "Description.json",
       "toolboxCategory": ""
