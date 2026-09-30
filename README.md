@@ -16,6 +16,10 @@ A GCode parser and interpreter, along with a 3D rendering environment using the 
 #### Version Info
 The master branch will be for TwinCAT HMI version 14.n (currently 14.3). We will maintain a separate branch for users of 1.12.
 
+### Demo Project
+
+The solution includes a simple demo HMI project, [CncView_Test](/CncView_Test/), that references the controls project directly. Open `TcHmiCncControls.sln`, start the live view of `CncView_Test`, paste some GCode into the editor and click **Render**. The editor and renderer are already bound together, so selecting a line highlights the path progress and clicking a path segment jumps to its line.
+
 ### Quick Start
 
 1. Add reference (Either as a [package](/release/) or as a project reference):

@@ -1,0 +1,68 @@
+<div
+  id="Desktop"
+  data-tchmi-type="TcHmi.Controls.System.TcHmiView"
+  data-tchmi-top="0"
+  data-tchmi-left="0"
+  data-tchmi-width-mode="Content"
+  data-tchmi-min-width="100"
+  data-tchmi-min-width-unit="%"
+  data-tchmi-height-mode="Content"
+  data-tchmi-min-height="100"
+  data-tchmi-min-height-unit="%"
+ data-tchmi-creator-viewport-width="1280" data-tchmi-creator-viewport-height="768">
+  <div
+    id="ViewDesktopBeckhoffLogo"
+    data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiImage"
+    data-tchmi-src="Images/Beckhoff_Logo.svg"
+    data-tchmi-left="20"
+    data-tchmi-top="20"
+    data-tchmi-width="194"
+    data-tchmi-height="57"
+  ></div>
+<div id="GCodePathRenderer_1" data-tchmi-type="TcHmi.Controls.TcHmiCncControls.GCodePathRenderer" data-tchmi-height="624" data-tchmi-height-unit="px" data-tchmi-hide-g0lines="False" data-tchmi-left="20" data-tchmi-left-unit="px" data-tchmi-lock-camera="False" data-tchmi-render-progress="True" data-tchmi-selected-segment="%ctrl%GCodeEditor_1::SelectedLine%/ctrl%" data-tchmi-selection-zoom="False" data-tchmi-top="87" data-tchmi-top-unit="px" data-tchmi-width="698" data-tchmi-width-unit="px">
+<script data-tchmi-target-attribute="data-tchmi-cnc-config" type="application/json">
+{}
+</script>
+<script data-tchmi-target-attribute="data-tchmi-tooling-config" type="application/json">
+{}
+</script>
+<script data-tchmi-target-attribute="data-tchmi-tooling-dynamics" type="application/json">
+{}
+</script>
+
+
+<script data-tchmi-target-attribute="data-tchmi-scene-bgcolor" type="application/json">
+{
+  "color": "rgba(161, 161, 161, 1)"
+}
+</script>
+</div>
+<div id="GCodeEditor_1" data-tchmi-type="TcHmi.Controls.TcHmiCncControls.GCodeEditor" data-tchmi-font-size="16" data-tchmi-height="624" data-tchmi-height-unit="px" data-tchmi-left="728" data-tchmi-left-unit="px" data-tchmi-read-only="False" data-tchmi-selected-line="%ctrl%GCodePathRenderer_1::SelectedSegment%/ctrl%" data-tchmi-top="87" data-tchmi-top-unit="px" data-tchmi-width="406" data-tchmi-width-unit="px">
+</div>
+<div id="TcHmiButton_1" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiButton" data-tchmi-height="50" data-tchmi-height-unit="px" data-tchmi-left="224" data-tchmi-left-unit="px" data-tchmi-text="Render" data-tchmi-top="27" data-tchmi-top-unit="px" data-tchmi-width="100" data-tchmi-width-unit="px" data-tchmi-word-wrap="True">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "%ctx%owner::Id|EventRegistrationMode=Resolve%/ctx%.onPressed",
+    "actions": [
+      {
+        "objectType": "ControlApiFunction",
+        "active": true,
+        "control": "GCodePathRenderer_1",
+        "fn": "setPath",
+        "fnParams": [
+          {
+            "objectType": "Symbol",
+            "valueType": "tchmi:general#/definitions/String",
+            "symbolExpression": "%ctrl%GCodeEditor_1::Content%/ctrl%"
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+</div>
